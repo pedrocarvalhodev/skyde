@@ -37,7 +37,7 @@ def make_prediction():
 		prediction = model.predict(dat)
 		prediction_output = pd.DataFrame(prediction).reset_index(drop=False)
 		prediction_output.columns = ["ID", "y_hat"]
-		prediction_output.to_csv("data/prediction_results.csv", index=False)
+		prediction_output.to_csv("data/pratos_flask_api/prediction_results.csv", index=False)
 		print(prediction_output.head())
 
 		# 3. Render results from prediction method

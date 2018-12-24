@@ -13,12 +13,12 @@ from sklearn.pipeline import make_pipeline
 import warnings
 warnings.filterwarnings("ignore")
 
-path = "/home/pedro/repos/ml_web_api/model-deployment-flask/data/pratos_flask_api/"
+path = "../data/pratos_flask_api/"
 
 
 def build_and_train():
 
-	data = pd.read_csv('/home/pedro/repos/ml_web_api/flask_api_working/data/training.csv')
+	data = pd.read_csv(path+'training.csv')
 	data = data.dropna(subset=['Gender', 'Married', 'Credit_History', 'LoanAmount'])
 
 	pred_var = ['Gender','Married','Dependents','Education','Self_Employed','ApplicantIncome','CoapplicantIncome',\
@@ -106,5 +106,5 @@ if __name__ == '__main__':
 	model = build_and_train()
 
 	filename = 'pratos_regressor_model.pk'
-	with open('/home/pedro/repos/ml_web_api/model-deployment-flask/models/'+filename, 'wb') as file:
+	with open(path+filename, 'wb') as file:
 		pickle.dump(model, file)
