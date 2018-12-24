@@ -102,3 +102,13 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+
+# data
+*.csv
+*.xlsx
+*.xls
+*.pk
+*.pkl
+data/
+models/*.pk
+models/*.pkl

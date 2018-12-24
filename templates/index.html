@@ -1,0 +1,22 @@
+<html> 
+
+<head>
+<title>SVHN Model as a Flask API</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+
+<body>
+
+    <h1>Predictor Web App</h1>
+    <h2>Chose 1. model and 2. data to predict</h2>
+
+    <form action="/predict" method="post" enctype="multipart/form-data">
+      <input type="file" accept=".pk" name="model" value="Upload model">
+      <input type="file" accept=".csv" name="dataset" value="Upload dataset">
+      <input type="submit" value="Predict"> {% if label %} {{ label }} {% endif %}
+    </form>
+
+</body>
+
+</html>
