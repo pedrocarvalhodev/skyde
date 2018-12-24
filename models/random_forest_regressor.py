@@ -13,21 +13,25 @@ from sklearn.pipeline import make_pipeline
 import warnings
 warnings.filterwarnings("ignore")
 
-path = "../data/pratos_flask_api/"
+
+# Add arg to choose model and data folder
+path = "../data/random_forest_regressor/"
 
 
 def build_and_train():
 
 	data = pd.read_csv(path+'training.csv')
-	data = data.dropna(subset=['Gender', 'Married', 'Credit_History', 'LoanAmount'])
+	data = data.dropna(subset=['Gender', 'Married', 'Credit_History'])#, 'LoanAmount'])
 
-	pred_var = ['Gender','Married','Dependents','Education','Self_Employed','ApplicantIncome','CoapplicantIncome',\
-				'LoanAmount','Loan_Amount_Term','Credit_History','Property_Area']
+	pred_var = ['Gender','Married','Dependents','Education',
+				'Self_Employed','ApplicantIncome','CoapplicantIncome',
+				#'LoanAmount','Loan_Amount_Term',
+				'Credit_History','Property_Area']
 
 	X_train, X_test, y_train, y_test = train_test_split(data[pred_var], data['Loan_Status'], test_size=0.25, random_state=42)
 	y_train = np.random.randint(1, 10, y_train.shape[0])
 	y_test = np.random.randint(1, 10, y_test.shape[0])
-	X_test.to_csv(path+"X_test_pratos_regressor_model.csv", index=False)
+	X_test.to_csv(path+"X_test.csv", index=False)
 
 	pipe = make_pipeline(PreProcessing(),
 						 RandomForestRegressor())
@@ -67,18 +71,20 @@ class PreProcessing(BaseEstimator, TransformerMixin):
 		"""Regular transform() that is a help for training, validation & testing datasets
 		   (NOTE: The operations performed here are the ones that we did prior to this cell)
 		"""
-		pred_var = ['Gender','Married','Dependents','Education','Self_Employed','ApplicantIncome',\
-					'CoapplicantIncome','LoanAmount','Loan_Amount_Term','Credit_History','Property_Area']
+		pred_var = ['Gender','Married','Dependents','Education',
+					'Self_Employed','ApplicantIncome','CoapplicantIncome',
+					#'LoanAmount','Loan_Amount_Term',
+					'Credit_History','Property_Area']
 		
 		df = df[pred_var]
 		
 		df['Dependents'] = df['Dependents'].fillna(0)
 		df['Self_Employed'] = df['Self_Employed'].fillna('No')
-		df['Loan_Amount_Term'] = df['Loan_Amount_Term'].fillna(self.term_mean_)
+		#df['Loan_Amount_Term'] = df['Loan_Amount_Term'].fillna(self.term_mean_)
 		df['Credit_History'] = df['Credit_History'].fillna(1)
 		df['Married'] = df['Married'].fillna('No')
 		df['Gender'] = df['Gender'].fillna('Male')
-		df['LoanAmount'] = df['LoanAmount'].fillna(self.amt_mean_)
+		#df['LoanAmount'] = df['LoanAmount'].fillna(self.amt_mean_)
 		
 		gender_values = {'Female' : 0, 'Male' : 1} 
 		married_values = {'No' : 0, 'Yes' : 1}
@@ -92,19 +98,12 @@ class PreProcessing(BaseEstimator, TransformerMixin):
 		
 		return df.as_matrix()
 
-	def fit(self, df, y=None, **fit_params):
-		"""Fitting the Training dataset & calculating the required values from train
-		   e.g: We will need the mean of X_train['Loan_Amount_Term'] that will be used in
-				transformation of X_test
-		"""
-		
-		self.term_mean_ = df['Loan_Amount_Term'].mean()
-		self.amt_mean_ = df['LoanAmount'].mean()
+	def fit(self, X, y=None, **fit_params):
 		return self
 
 if __name__ == '__main__':
 	model = build_and_train()
 
-	filename = 'pratos_regressor_model.pk'
+	filename = 'random_forest_regressor.pk'
 	with open(path+filename, 'wb') as file:
 		pickle.dump(model, file)
