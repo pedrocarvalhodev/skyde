@@ -104,11 +104,10 @@ venv.bak/
 .mypy_cache/
 
 # data
-*.csv
-*.xlsx
-*.xls
-*.pk
-*.pkl
-data/
+data/*.csv
+data/*.xlsx
+data/*.xls
+data/*.pk
+data/*.pkl
 models/*.pk
 models/*.pkl
