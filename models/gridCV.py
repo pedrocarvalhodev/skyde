@@ -23,10 +23,12 @@ def build_and_train():
 
 	# 2. Validate
 	train = pd.read_csv(data_path+'train.csv')
+	train.drop("PassengerId", axis=1, inplace=True)
+
 	y = "Survived"
 	X = [x for x in train.columns if x != y]
 
-	X_train, X_test, y_train, y_test = train_test_split(train[X], train[y], test_size=0.25, random_state=42)
+	X_train, X_test, y_train, y_test = train_test_split(train[X], train[y], test_size=0.5, random_state=42)
 
 	print("Shape: ", X_train.shape, X_test.shape, y_train.shape, y_test.shape)
 	y_train = y_train.as_matrix()
@@ -125,7 +127,7 @@ class PreProcessing(BaseEstimator, TransformerMixin):
 		def process_fares(df):
 			#global df
 			# there's one missing fare value - replacing it with the mean.
-			df.Fare.fillna(df.iloc[:891].Fare.mean(), inplace=True)
+			df.Fare.fillna(df.Fare.median(), inplace=True)
 			status('fare')
 			return df
 
@@ -182,6 +184,7 @@ class PreProcessing(BaseEstimator, TransformerMixin):
 			df['Singleton'] = df['FamilySize'].map(lambda s: 1 if s == 1 else 0)
 			df['SmallFamily'] = df['FamilySize'].map(lambda s: 1 if 2 <= s <= 4 else 0)
 			df['LargeFamily'] = df['FamilySize'].map(lambda s: 1 if 5 <= s else 0)
+			df.drop("FamilySize", axis=1, inplace=True)
 			
 			status('family')
 			return df
@@ -190,16 +193,18 @@ class PreProcessing(BaseEstimator, TransformerMixin):
 		def transform(df):
 			"""Transformations
 			"""
-			df = get_titles(df)
-			df = process_names(df)
-			#df = process_age(df)
+			##df = get_titles(df)
+			##df = process_names(df)
+			##df = process_age(df)
 			df = process_fares(df)
-			df = process_embarked(df)
-			df = process_cabin(df)
+			##df = process_embarked(df)
+			##df = process_cabin(df)
+			
 			df = process_sex(df)
-			df = process_pclass(df)
-			#df = process_ticket(df)
-			df = process_family(df)
+			
+			##df = process_pclass(df)
+			##df = process_ticket(df)
+			#df = process_family(df)
 			return df
 
 		df = transform(df)
@@ -209,9 +214,13 @@ class PreProcessing(BaseEstimator, TransformerMixin):
 		df.replace([np.inf, -np.inf], np.nan, inplace=True)
 		df = df.dropna(axis=1)
 
-		print("Shape transform: ", df.shape)
-		print(df.info())
-		return df #.as_matrix()
+		#print("Shape transform: ", df.shape)
+		#print(df.info())
+
+		df = df[["Pclass","SibSp","Parch","Fare"]].copy()
+
+
+		return df
 
 	def fit(self, X, y=None, **fit_params):
 		return self
@@ -226,20 +235,23 @@ class FeatEngineering(BaseEstimator, TransformerMixin):
 	def transform(self, df):
 		"""Features selection
 		"""
-		print("Before processing", df.columns)
+		#print("Before processing", df.columns)
 		df = df.reset_index(drop=True)
 		df_norm = (df - df.mean()) / (df.max() - df.min())
 		df_norm = df_norm.apply(lambda x : np.around(x,1))
 		df_norm.columns = [x+"_norm" for x in df.columns]
-		print("1",df.shape)
+		#print("1",df.shape)
 		df = df.merge(df_norm, how='inner', left_index=True, right_index=True)
-		print("2",df.shape)
+		#print("2",df.shape)
 		df_norm=None
 		df.replace([np.inf, -np.inf], np.nan, inplace=True)
-		df = df.dropna(axis=1).as_matrix()
-		print("3",df.shape)
-		print("Feature Eng completed")
-		return df
+		#df = df.dropna(axis=1).as_matrix()
+
+		main_vars = ["Pclass","SibSp","Parch","Fare","Pclass_norm","SibSp_norm","Parch_norm","Fare_norm"]
+		df = df[main_vars].copy()
+		#print("3",df.shape)
+		#print("Feature Eng completed")
+		return df.as_matrix()
 
 
 	def fit(self, X, y=None, **fit_params):

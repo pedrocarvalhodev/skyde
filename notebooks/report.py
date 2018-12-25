@@ -35,6 +35,12 @@ X_train, X_test, y_train, y_test = train_test_split(train[X], train[y], test_siz
 print("Shape: ", X_train.shape, X_test.shape, y_train.shape, y_test.shape)
 
 
+# In[3]:
+
+
+X_train.head(2).transpose()
+
+
 # In[39]:
 
 
