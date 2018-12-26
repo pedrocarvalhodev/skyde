@@ -121,8 +121,6 @@ class PreProcessing(BaseEstimator, TransformerMixin):
 			return df
 
 		def process_embarked(df):
-			#global df
-			# two missing embarked values - filling them with the most frequent one in the train  set(S)
 			df.Embarked.fillna('S', inplace=True)
 			# dummy encoding 
 			embarked_dummies = pd.get_dummies(df['Embarked'], prefix='Embarked')
