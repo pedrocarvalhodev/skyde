@@ -130,8 +130,6 @@ class PreProcessing(BaseEstimator, TransformerMixin):
 			return df
 
 		def process_cabin(df):
-			#global df    
-			# replacing missing cabins with U (for Uknown)
 			df.Cabin.fillna('U', inplace=True)
 			# mapping each Cabin value with the cabin letter
 			df['Cabin'] = df['Cabin'].map(lambda c: c[0])
