@@ -319,6 +319,100 @@ df.shape
 
 
 
+# In[8]:
+
+
+import pandas as pd
+
+
+# In[12]:
+
+
+path = "/home/pedro/repos/ml_web_api/ml-app-model/data/gridCV/"
+
+
+# In[23]:
+
+
+y_hat = pd.read_csv(path+"prediction_results.csv")
+y_hat.shape
+
+
+# In[24]:
+
+
+y_test = pd.read_csv(path+"train.csv")
+y_test = y_test.reset_index(drop=False)
+y_test =y_test[["index","Survived"]].copy()
+y_test.shape
+
+
+# In[38]:
+
+
+res = y_test.merge(y_hat, left_on="index", right_on="ID", how="inner")
+
+
+# In[39]:
+
+
+res = res[["ID","Survived", "y_hat"]]
+
+
+# In[40]:
+
+
+res.head(2)
+
+
+# In[41]:
+
+
+from sklearn.metrics import confusion_matrix
+
+
+# In[42]:
+
+
+confusion_matrix(y_true=res.Survived, y_pred=res.y_hat)
+
+
+# In[50]:
+
+
+res_table = res.groupby(["Survived", "y_hat"]).ID.count().reset_index(drop=False)
+res_table["perc"] = np.around(res_table.ID / res_table.ID.sum() * 100,1)
+res_table
+
+
+# In[48]:
+
+
+#Survived	y_hat	ID	perc
+#0	0	0	490	55.0
+#1	0	1	59	6.6
+#2	1	0	193	21.7
+#3	1	1	149	16.7
+
+
+# In[ ]:
+
+
+
+
+
+# In[ ]:
+
+
+
+
+
+# In[ ]:
+
+
+
+
+
 # In[ ]:
 
 
