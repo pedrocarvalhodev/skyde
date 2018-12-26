@@ -58,5 +58,5 @@ if __name__ == '__main__':
 		print("imported random_forest_regressor")
 	if args.ml == "gridCV":
 		from models.gridCV import PreProcessing, FeatEngineering
-		print("imported clf_gridCV")
+		print("imported gridCV")
 	app.run(host='0.0.0.0', port=8000, debug=True)

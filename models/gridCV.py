@@ -14,7 +14,7 @@ from sklearn.pipeline import make_pipeline
 import warnings
 warnings.filterwarnings("ignore")
 
-path = "../data/titanic/"
+path = "../data/gridCV/"
 
 #data_path="https://raw.githubusercontent.com/ahmedbesbes/How-to-score-0.8134-in-Titanic-Kaggle-Challenge/master/data/"
 data_path="/home/pedro/repos/ml_web_api/How-to-score-0.8134-in-Titanic-Kaggle-Challenge/data/"
@@ -35,7 +35,6 @@ def build_and_train():
 	y_test = y_test.as_matrix()
 
 	# 3. Set pipeline
-	print("A - Grid shape: ", X_train.shape)
 	pipe = make_pipeline(PreProcessing(),
 						 FeatEngineering(),
 						 RandomForestClassifier())
@@ -46,11 +45,9 @@ def build_and_train():
 				 "randomforestclassifier__max_leaf_nodes": [None, 5, 10, 20], 
 				 "randomforestclassifier__min_impurity_split": [0.1, 0.2, 0.3]}
 
-	print("C - Grid shape: ", X_train.shape)
 	grid = GridSearchCV(pipe, param_grid=param_grid, cv=3)
 
 	# 4. Fit model
-	print("D - Grid shape: ", X_train.shape)
 	grid.fit(X_train, y_train)
 
 	return(grid)
@@ -85,7 +82,8 @@ class PreProcessing(BaseEstimator, TransformerMixin):
 				"Lady" : "Royalty"}
 
 		def status(feature):
-			print('Processing', feature, ': ok')
+			#print('Processing', feature, ': ok')
+			pass
 
 
 		def get_titles(df):
@@ -97,20 +95,11 @@ class PreProcessing(BaseEstimator, TransformerMixin):
 			status('Title')
 			return df
 
+		def process_age(df):
 
-		def fill_age(row):
-			condition = (
-				(grouped_median_train['Sex'] == row['Sex']) & 
-				(grouped_median_train['Title'] == row['Title']) & 
-				(grouped_median_train['Pclass'] == row['Pclass'])) 
-			return grouped_median_train[condition]['Age'].values[0]
-
-		#def process_age(self, df):
-		#	#global df
-		#	# a function that fills the missing values of the Age variable
-		#	df['Age'] = df.apply(lambda row: fill_age(row) if np.isnan(row['Age']) else row['Age'], axis=1)
-		#	status('age')
-		#	return df
+			df['Age'] = df['Age'].fillna(df.groupby(['Sex','Pclass'])['Age'].transform('mean'))
+			#status('age')
+			return df
 
 		def process_names(df):
 			#global df
@@ -159,7 +148,8 @@ class PreProcessing(BaseEstimator, TransformerMixin):
 		def process_sex(df):
 			#global df
 			# mapping string values to numerical one 
-			df['Sex'] = df['Sex'].map({'male':1, 'female':0})
+			df['Sex'] = df['Sex'].map({'male':1.0, 'female':0.0})
+			df['Sex'] = df['Sex'].fillna(1.0)
 			status('Sex')
 			return df
 
@@ -195,7 +185,7 @@ class PreProcessing(BaseEstimator, TransformerMixin):
 			"""
 			##df = get_titles(df)
 			##df = process_names(df)
-			##df = process_age(df)
+			df = process_age(df)
 			df = process_fares(df)
 			##df = process_embarked(df)
 			##df = process_cabin(df)
@@ -208,18 +198,9 @@ class PreProcessing(BaseEstimator, TransformerMixin):
 			return df
 
 		df = transform(df)
+		df = df[["Sex","Age","Pclass","SibSp","Parch","Fare"]].copy()
 		df = df.select_dtypes(include=[np.number]).copy()
 		df = df.astype(float)
-
-		df.replace([np.inf, -np.inf], np.nan, inplace=True)
-		df = df.dropna(axis=1)
-
-		#print("Shape transform: ", df.shape)
-		#print(df.info())
-
-		df = df[["Pclass","SibSp","Parch","Fare"]].copy()
-
-
 		return df
 
 	def fit(self, X, y=None, **fit_params):
@@ -235,22 +216,16 @@ class FeatEngineering(BaseEstimator, TransformerMixin):
 	def transform(self, df):
 		"""Features selection
 		"""
-		#print("Before processing", df.columns)
 		df = df.reset_index(drop=True)
 		df_norm = (df - df.mean()) / (df.max() - df.min())
 		df_norm = df_norm.apply(lambda x : np.around(x,1))
 		df_norm.columns = [x+"_norm" for x in df.columns]
-		#print("1",df.shape)
 		df = df.merge(df_norm, how='inner', left_index=True, right_index=True)
-		#print("2",df.shape)
 		df_norm=None
 		df.replace([np.inf, -np.inf], np.nan, inplace=True)
-		#df = df.dropna(axis=1).as_matrix()
 
-		main_vars = ["Pclass","SibSp","Parch","Fare","Pclass_norm","SibSp_norm","Parch_norm","Fare_norm"]
+		main_vars = ["Sex", "Age", "Pclass","SibSp","Parch","Fare","Pclass_norm","SibSp_norm","Parch_norm","Fare_norm"]
 		df = df[main_vars].copy()
-		#print("3",df.shape)
-		#print("Feature Eng completed")
 		return df.as_matrix()
 
 
@@ -261,6 +236,6 @@ class FeatEngineering(BaseEstimator, TransformerMixin):
 if __name__ == '__main__':
 	model = build_and_train()
 
-	filename = 'clf_titanic.pk'
+	filename = 'gridCV.pk'
 	with open(path+filename, 'wb') as file:
 		pickle.dump(model, file)
