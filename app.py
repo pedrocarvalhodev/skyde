@@ -37,6 +37,7 @@ def make_prediction():
 		prediction_output = pd.DataFrame(prediction).reset_index(drop=False)
 		prediction_output.columns = ["ID", "y_hat"]
 		output_path = f"data/{args.ml}/prediction_results.csv"
+		
 		prediction_output.to_csv(output_path, index=False)
 		print(output_path, prediction_output.head())
 
@@ -48,15 +49,15 @@ if __name__ == '__main__':
 	parser = argparse.ArgumentParser()
 	parser.add_argument("-ml")
 	args = parser.parse_args()
-	print(args.ml)
+	#print(args.ml)
 
-	if args.ml == "random_forest_classifier":
-		from models.random_forest_classifier import PreProcessing
-		print("imported random_forest_classifier")
-	if args.ml == "random_forest_regressor":
-		from models.random_forest_regressor import PreProcessing
-		print("imported random_forest_regressor")
-	if args.ml == "gridCV":
-		from models.gridCV import PreProcessing, FeatEngineering
-		print("imported gridCV")
+	#if args.ml == "random_forest_classifier":
+	#	from models.random_forest_classifier import PreProcessing
+	#	print("imported random_forest_classifier")
+	#if args.ml == "random_forest_regressor":
+	#	from models.random_forest_regressor import PreProcessing
+	#	print("imported random_forest_regressor")
+	#if args.ml == "gridCV":
+	from models.gridCV import PreProcessing, FeatEngineering
+	#print("imported gridCV")
 	app.run(host='0.0.0.0', port=8000, debug=True)

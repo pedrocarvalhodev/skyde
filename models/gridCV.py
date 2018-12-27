@@ -195,7 +195,7 @@ class PreProcessing(BaseEstimator, TransformerMixin):
 
 		df = transform(df)
 		df = df[["Sex","Age","Pclass","SibSp","Parch","Fare"]].copy()
-		df = df.select_dtypes(include=[np.number]).copy()
+		#df = df.select_dtypes(include=[np.number]).copy()
 		df = df.astype(float)
 		return df
 
@@ -214,11 +214,11 @@ class FeatEngineering(BaseEstimator, TransformerMixin):
 		"""
 		df = df.reset_index(drop=True)
 		df_norm = (df - df.mean()) / (df.max() - df.min())
-		df_norm = df_norm.apply(lambda x : np.around(x,1))
+		#df_norm = df_norm.apply(lambda x : np.around(x,1))
 		df_norm.columns = [x+"_norm" for x in df.columns]
 		df = df.merge(df_norm, how='inner', left_index=True, right_index=True)
 		df_norm=None
-		df.replace([np.inf, -np.inf], np.nan, inplace=True)
+		#df.replace([np.inf, -np.inf], np.nan, inplace=True)
 
 		main_vars = ["Sex", "Age", "Pclass","SibSp","Parch","Fare","Pclass_norm","SibSp_norm","Parch_norm","Fare_norm"]
 		df = df[main_vars].copy()
