@@ -58,6 +58,6 @@ if __name__ == '__main__':
 	#	from models.random_forest_regressor import PreProcessing
 	#	print("imported random_forest_regressor")
 	#if args.ml == "gridCV":
-	from models.gridCV import PreProcessing, FeatEngineering
+	from models.gridCV.model_pipeline import PreProcessing, FeatEngineering, FeatSelection
 	#print("imported gridCV")
 	app.run(host='0.0.0.0', port=8000, debug=True)
