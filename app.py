@@ -23,7 +23,7 @@ def make_prediction():
 		data_file = request.files['dataset']
 		print(data_file)
 		data = data_file.read()
-		dat = pd.read_csv(io.BytesIO(data), encoding='utf-8', sep=",")
+		data = pd.read_csv(io.BytesIO(data), encoding='utf-8', sep=",")
 
 		# 2. Get model
 		model_file = request.files['model']
@@ -33,7 +33,7 @@ def make_prediction():
 		model = pickle.load(model_file)
 
 		# 2. Predict and save results
-		prediction = model.predict(dat)
+		prediction = model.predict(data)
 		prediction_output = pd.DataFrame(prediction).reset_index(drop=False)
 		prediction_output.columns = ["ID", "y_hat"]
 		#output_path = f"data/{args.ml}/prediction_results.csv"

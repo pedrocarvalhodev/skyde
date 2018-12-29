@@ -39,10 +39,8 @@ function show(shown, hidden) {
     <h2>Table of content</h2>
     <a href="#" onclick="return show('Page1','Page2');">Show page 1</a>
     <form action="/var_importance" method="post" enctype="multipart/form-data">
-    {% for table in tables %}
-            {{titles[loop.index]}}
-            {{ table|safe }}
-    {% endfor %}
+    <input type="file" accept=".csv" name="dataset" value="Upload dataset">
+    <input type="submit" value="Viz"> {% for table in tables %} {{titles[loop.index]}} {{ table|safe }} {% endfor %}
 
   </div>
 
