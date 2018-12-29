@@ -36,7 +36,8 @@ def make_prediction():
 		prediction = model.predict(dat)
 		prediction_output = pd.DataFrame(prediction).reset_index(drop=False)
 		prediction_output.columns = ["ID", "y_hat"]
-		output_path = f"data/{args.ml}/prediction_results.csv"
+		#output_path = f"data/{args.ml}/prediction_results.csv"
+		output_path = f"data/gridCV/prediction_results.csv"
 		
 		prediction_output.to_csv(output_path, index=False)
 		print(output_path, prediction_output.head())
@@ -45,11 +46,22 @@ def make_prediction():
 		return render_template('index.html', label="Prediction processed. Check folder for results.")
 
 
+@app.route('/var_importance', methods=['POST'])
+def get_var_importance():
+	if request.method=='POST':
+		data_file = request.files['dataset']
+		data = data_file.read()
+		data = pd.read_csv(io.BytesIO(data), encoding='utf-8', sep=",")
+		data = data.head()
+
+		return render_template('index.html',  tables=[data.to_html(classes='data')], titles=data.columns.values)
+
+
 if __name__ == '__main__':
 	from models.gridCV.model_pipeline import PreProcessing, FeatEngineering, FeatSelection
 	
-	parser = argparse.ArgumentParser()
-	parser.add_argument("-ml")
-	args = parser.parse_args()
+	#parser = argparse.ArgumentParser()
+	#parser.add_argument("-ml")
+	#args = parser.parse_args()
 	
 	app.run(host='0.0.0.0', port=8000, debug=True)
