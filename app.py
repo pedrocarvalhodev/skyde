@@ -10,6 +10,13 @@ import pandas as pd
 from sklearn.externals import joblib
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 
+#Plot png
+import random
+from flask import Response
+from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
+from matplotlib.figure import Figure
+
+
 from matplotlib import pyplot as plt
 import seaborn as sns
 sns.set_style("dark") #E.G.
@@ -111,53 +118,80 @@ def get_viz_dataset():
 		return render_template('viz_dataset.html',  tables=[data.to_html(classes='data')], titles=data.columns.values)
 
 
+@app.route('/varimportplot.png')
+def plot_png():
+    fig = create_figure()
+    output = io.BytesIO()
+    FigureCanvas(fig).print_png(output)
+    return Response(output.getvalue(), mimetype='image/png')
+
+def create_figure():
+    fig = Figure()
+    axis = fig.add_subplot(1, 1, 1)
+    xs = range(100)
+    ys = [random.randint(1, 50) for x in xs]
+    axis.plot(xs, ys)
+    return fig
+
+
+#def create_figure(xs, ys):
+#    fig = Figure()
+#    xs = ["A","B","C","D","E","F"]
+#    ys = [2,4,3,5,4,6]
+#    ax = fig.add_subplot(1, 1, 1)
+#    ax.barh(xs, ys)
+#    ax.set_xlabel('Performance')
+#    ax.set_ylabel('Top Features \n Descending order')
+#    ax.set_title('How fast do you want to go today?')
+#    return fig
+
+
 @app.route('/var_importance', methods=['POST'])
 def get_var_importance():
+
 	if request.method=='POST':
-		
+
+		# 1. Get and clean dataset
 		data_file = request.files['dataset']
 		data = data_file.read()
 		data = pd.read_csv(io.BytesIO(data), encoding='utf-8', sep=",")
 		df = data.drop("PassengerId", axis=1)
-
 		df = df.select_dtypes(include=[np.number]).copy()
 		df = df.dropna().astype(float)
 
+		# 2. Get y, X fields
 		y = str(request.form['target_var'])
 		print("target: ", y)
 		X = [x for x in df.columns if x != y]
-
-		clf = RandomForestClassifier(n_estimators=50, max_features='sqrt')
 		df_X = df[X].copy()
 		df_X['randomVar'] = np.random.randint(1, 6, df_X.shape[0])
 
+		# 3. Run Variable Importance
+		clf = RandomForestClassifier(n_estimators=50, max_features='sqrt')
 		clf = clf.fit(df_X, df[y])
 		features = pd.DataFrame()
 		features['feature'] = df_X.columns
 		features['importance'] = clf.feature_importances_
 		features.sort_values(by=['importance'], ascending=True, inplace=True)
-		features.set_index('feature', inplace=True)
 		features = features.sort_values(by="importance", ascending=False).reset_index(drop=False)
 		features = features.head()
+		# create_figure(xs=list(features['feature'].values), ys=list(features['importance'].values))
 
-		#features.set_index('feature', inplace=True)
-		#features.plot(kind='barh', figsize=(25, 25))
+		
+		print(list(features['feature'].values), list(features['importance'].values))
+		#plt.plot(x,y)
+		#fig = Figure()
+		#ax = fig.add_subplot(1, 1, 1)
+		plt.barh(list(features['feature'].values), list(features['importance'].values))
+		#ax.set_xlabel('Performance')
+		#ax.set_ylabel('Top Features \n Descending order')
+		#ax.set_title('How fast do you want to go today?')
+
 		img = io.BytesIO()
-
-		fig = plt.figure()
-		ax = fig.add_subplot(111)
-		ax.bar(features['feature'], features['importance'], align='center', alpha=0.5)
-
-		#plt.bar(x=features['importance'], height=10, width=5)
-		#plt.bar(features['feature'], features['importance'], align='center', alpha=0.5)
-		
-		#plt.savefig(img, format='png')
-		fig.savefig(img, format='png')
-		
+		plt.savefig(img, format='png')
 		img.seek(0)
-		plot_url = base64.b64encode(img.getvalue())
-		return render_template('var_importance.html', plot_url=plot_url)
-		#return render_template('var_importance.html',  tables=[features.to_html(classes='features')], titles=features.columns.values)
+		plot_url = base64.b64encode(img.getvalue()).decode()
+		return '<img src="data:image/png;base64,{}">'.format(plot_url)
 
 
 if __name__ == '__main__':
