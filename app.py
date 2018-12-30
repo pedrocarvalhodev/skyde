@@ -173,19 +173,14 @@ def get_var_importance():
 		features['feature'] = df_X.columns
 		features['importance'] = clf.feature_importances_
 		features.sort_values(by=['importance'], ascending=True, inplace=True)
-		features = features.sort_values(by="importance", ascending=False).reset_index(drop=False)
+		features = features.sort_values(by="importance", ascending=True).reset_index(drop=False)
 		features = features.head()
-		# create_figure(xs=list(features['feature'].values), ys=list(features['importance'].values))
-
 		
-		print(list(features['feature'].values), list(features['importance'].values))
-		#plt.plot(x,y)
-		#fig = Figure()
-		#ax = fig.add_subplot(1, 1, 1)
+
 		plt.barh(list(features['feature'].values), list(features['importance'].values))
-		#ax.set_xlabel('Performance')
-		#ax.set_ylabel('Top Features \n Descending order')
-		#ax.set_title('How fast do you want to go today?')
+		plt.xlabel('Performance')
+		plt.ylabel('Top Features \n Descending order')
+		plt.title('How fast do you want to go today?')
 
 		img = io.BytesIO()
 		plt.savefig(img, format='png')
