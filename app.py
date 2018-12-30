@@ -19,6 +19,14 @@ def index():
 def about():
     return flask.render_template('about.html')
 
+@app.route('/train/')
+def train():
+    return flask.render_template('train.html')
+
+@app.route('/evaluate/')
+def evaluate():
+    return flask.render_template('evaluate.html')
+
 @app.route('/predict/')
 def predict():
     return flask.render_template('predict.html')
@@ -31,7 +39,32 @@ def viz_dataset():
 def var_importance():
     return flask.render_template('var_importance.html')
 
-@app.route('/predict/predict', methods=['POST'])
+
+@app.route('/train', methods=['POST'])
+def run_model_train():
+	if request.method=='POST':
+		data_file = request.files['dataset']
+		data = data_file.read()
+		data = pd.read_csv(io.BytesIO(data), encoding='utf-8', sep=",")
+		#data = data.head()
+		## model_pipeline (train.csv) -> download pickle model
+
+		return render_template('train.html',  tables=[data.to_html(classes='data')], titles=data.columns.values)
+
+
+@app.route('/evaluate', methods=['POST'])
+def evaluate_model():
+	if request.method=='POST':
+		data_file = request.files['dataset']
+		data = data_file.read()
+		data = pd.read_csv(io.BytesIO(data), encoding='utf-8', sep=",")
+		#data = data.head()
+		## model_pipeline (train.csv) -> download pickle model
+
+		return render_template('evaluate.html',  tables=[data.to_html(classes='data')], titles=data.columns.values)
+
+
+@app.route('/predict', methods=['POST'])
 def make_prediction():
 	if request.method=='POST':
 		# 1. Get data from request 
@@ -58,10 +91,10 @@ def make_prediction():
 		print(output_path, prediction_output.head())
 
 		# 3. Render results from prediction method
-		return render_template('index.html', label="Prediction processed. Check folder for results.")
+		return render_template('predict.html', label="Prediction processed. Check folder for results.")
 
 
-@app.route('/viz_dataset/viz_dataset', methods=['POST'])
+@app.route('/viz_dataset', methods=['POST'])
 def get_viz_dataset():
 	if request.method=='POST':
 		data_file = request.files['dataset']
@@ -72,7 +105,7 @@ def get_viz_dataset():
 		return render_template('index.html',  tables=[data.to_html(classes='data')], titles=data.columns.values)
 
 
-@app.route('/var_importance/var_importance', methods=['POST'])
+@app.route('/var_importance', methods=['POST'])
 def get_var_importance():
 	if request.method=='POST':
 		data_file = request.files['dataset']

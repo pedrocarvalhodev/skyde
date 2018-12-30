@@ -1,0 +1,29 @@
+<html> 
+
+<head>
+<title>ML Flask API</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+
+<body>
+
+{% extends "layout.html" %}
+{% block content %}
+
+    <div class="train">
+
+    <h1>Evaluate model performance</h1>
+    <h2>Choose train data and run model</h2>
+    <h3>-------------</h3>
+    <form action="/train" method="post" enctype="multipart/form-data">
+      <input type="file" accept=".csv" name="train_dataset" value="Upload dataset">
+      <input type="submit" value="Train"> {% if label %} {{ label }} {% endif %}
+    </form>
+
+    </div>
+    {% endblock %}
+
+</body>
+
+</html>
