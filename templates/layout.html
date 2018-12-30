@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+  <body>
+    <header>
+      <div class="container">
+
+      <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+      <style type="text/css">
+      #list { background-color: WhiteSmoke; }
+      .horizontal { display: inline; border-left: 2px solid; padding-left: 0.3em; }
+      .first { border-left: none; padding-left: 0; }
+      </style>
+      </head>
+      <body>
+      <strong><nav>
+          <ul id="list">
+            <li class="horizontal first"><a href="{{ url_for('index') }}">Home</a></li>
+            <li class="horizontal"><a href="{{ url_for('about') }}">About</a></li>
+            <li class="horizontal"><a href="{{ url_for('predict') }}">predict</a></li>
+            <li class="horizontal"><a href="{{ url_for('viz_dataset') }}">viz_dataset</a></li>
+            <li class="horizontal"><a href="{{ url_for('var_importance') }}">var_importance</a></li>
+          </ul>
+        </nav></strong>
+
+      </div>
+    </header>
+
+     <div class="container">
+      {% block content %}
+      {% endblock %}
+    </div>
+  </body>
+</html>

@@ -1,0 +1,27 @@
+<html> 
+
+<head>
+<title>ML Flask API</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+
+<body>
+
+    {% extends "layout.html" %}
+    {% block content %}
+    <div class="viz_dataset">
+
+    <h1>Check dataset</h1>
+    <h2>Data sample Viz</h2>
+    <form action="/viz_dataset" method="post" enctype="multipart/form-data">
+    <input type="file" accept=".csv" name="dataset" value="Upload dataset">
+    <input type="submit" value="Viz"> {% for table in tables %} {{titles[loop.index]}} {{ table|safe }} {% endfor %}
+    </form>
+
+    </div>
+    {% endblock %}
+
+</body>
+
+</html>

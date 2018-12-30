@@ -1,30 +1,19 @@
 <html> 
 
-<!--
 <head>
 <title>ML Flask API</title>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 </head>
--->
-
-<head>
-<script>
-function show(shown, hidden) {
-  document.getElementById(shown).style.display='block';
-  document.getElementById(hidden).style.display='none';
-  return false;
-}
-</script>
-</head>
 
 <body>
 
-<div id="Page1">
+  {% extends "layout.html" %}
+  {% block content %}
+  <div class="about">
 
     <h1>Predictor Web App</h1>
-    <h2>Chose 1. model and 2. data to predict</h2>
-	<a href="#" onclick="return show('Page2','Page1');">Show page 2</a>
+    <h2>Choose 1. model and 2. data to predict</h2>
 	<h3>-------------</h3>
     <form action="/predict" method="post" enctype="multipart/form-data">
       <input type="file" accept=".pk" name="model" value="Upload model">
@@ -32,17 +21,28 @@ function show(shown, hidden) {
       <input type="submit" value="Predict"> {% if label %} {{ label }} {% endif %}
     </form>
 
-</div>
+    <h1>--------------------</h1>
 
- <div id="Page2" style="display:none">
-    <h1>Variable Importance</h1>
-    <h2>Table of content</h2>
-    <a href="#" onclick="return show('Page1','Page2');">Show page 1</a>
-    <form action="/var_importance" method="post" enctype="multipart/form-data">
+    <h1>Check dataset</h1>
+    <h2>Data sample Viz</h2>
+    <form action="/viz_dataset" method="post" enctype="multipart/form-data">
     <input type="file" accept=".csv" name="dataset" value="Upload dataset">
     <input type="submit" value="Viz"> {% for table in tables %} {{titles[loop.index]}} {{ table|safe }} {% endfor %}
+    </form>
 
-  </div>
+    <h1>--------------------</h1>
+
+    <h1>Variable Importance</h1>
+    <h2>Top 5 fields</h2>
+    <form action="/var_importance" method="post" enctype="multipart/form-data">
+    <input type="file" accept=".csv" name="dataset" value="Upload dataset">
+    
+    <input type="submit" value="Viz"> {% for table in tables %} {{titles[loop.index]}} {{ table|safe }} {% endfor %}
+    
+    </form>
+
+    </div>
+    {% endblock %}
 
 </body>
 

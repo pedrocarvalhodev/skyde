@@ -15,8 +15,23 @@ app = Flask(__name__)
 def index():
 	return flask.render_template('index.html')
 
+@app.route('/about/')
+def about():
+    return flask.render_template('about.html')
 
-@app.route('/predict', methods=['POST'])
+@app.route('/predict/')
+def predict():
+    return flask.render_template('predict.html')
+
+@app.route('/viz_dataset/')
+def viz_dataset():
+    return flask.render_template('viz_dataset.html')
+
+@app.route('/var_importance/')
+def var_importance():
+    return flask.render_template('var_importance.html')
+
+@app.route('/predict/predict', methods=['POST'])
 def make_prediction():
 	if request.method=='POST':
 		# 1. Get data from request 
@@ -46,8 +61,8 @@ def make_prediction():
 		return render_template('index.html', label="Prediction processed. Check folder for results.")
 
 
-@app.route('/var_importance', methods=['POST'])
-def get_var_importance():
+@app.route('/viz_dataset/viz_dataset', methods=['POST'])
+def get_viz_dataset():
 	if request.method=='POST':
 		data_file = request.files['dataset']
 		data = data_file.read()
@@ -55,6 +70,29 @@ def get_var_importance():
 		data = data.head()
 
 		return render_template('index.html',  tables=[data.to_html(classes='data')], titles=data.columns.values)
+
+
+@app.route('/var_importance/var_importance', methods=['POST'])
+def get_var_importance():
+	if request.method=='POST':
+		data_file = request.files['dataset']
+		data = data_file.read()
+		data = pd.read_csv(io.BytesIO(data), encoding='utf-8', sep=",")
+		#data = data.head()
+
+		clf = RandomForestClassifier(n_estimators=50, max_features='sqrt')
+		df_X = df[X].copy()
+		df_X['randomVar'] = np.random.randint(1, 6, df_X.shape[0])
+		clf = clf.fit(df_X, df[y])
+		features = pd.DataFrame()
+		features['feature'] = df_X.columns
+		features['importance'] = clf.feature_importances_
+		features.sort_values(by=['importance'], ascending=True, inplace=True)
+		features.set_index('feature', inplace=True)
+		features = features.sort_values(by="importance", ascending=False).reset_index(drop=False)
+		features = features.head()
+
+		return render_template('index.html',  tables=[features.to_html(classes='features')], titles=features.columns.values)
 
 
 if __name__ == '__main__':
