@@ -10,16 +10,10 @@ import pandas as pd
 from sklearn.externals import joblib
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 
-#Plot png
-import random
-from flask import Response
-from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
-from matplotlib.figure import Figure
-
 
 from matplotlib import pyplot as plt
 import seaborn as sns
-sns.set_style("dark") #E.G.
+sns.set_style("dark")
 
 app = Flask(__name__)
 
@@ -31,6 +25,10 @@ def index():
 @app.route('/about/')
 def about():
     return flask.render_template('about.html')
+
+@app.route('/report/')
+def report():
+    return flask.render_template('report.html')
 
 @app.route('/train/')
 def train():
@@ -68,13 +66,25 @@ def run_model_train():
 @app.route('/evaluate', methods=['POST'])
 def evaluate_model():
 	if request.method=='POST':
-		data_file = request.files['dataset']
-		data = data_file.read()
-		data = pd.read_csv(io.BytesIO(data), encoding='utf-8', sep=",")
-		#data = data.head()
-		## model_pipeline (train.csv) -> download pickle model
+		y_test = request.files['y_test']
+		y_test = y_test.read()
+		y_test = pd.read_csv(io.BytesIO(y_test), encoding='utf-8', sep=",")
 
-		return render_template('evaluate.html',  tables=[data.to_html(classes='data')], titles=data.columns.values)
+		y_hat = request.files['y_hat']
+		y_hat = y_hat.read()
+		y_hat = pd.read_csv(io.BytesIO(y_hat), encoding='utf-8', sep=",")
+
+		# y_test (train), y_hat (predicted results)
+		y_test = y_test.reset_index(drop=False)
+		y_test =y_test[["index","Survived"]].copy()
+
+		res = y_test.merge(y_hat, left_on="index", right_on="ID", how="inner")
+		res = res[["ID","Survived", "y_hat"]]
+
+		res_table = res.groupby(["Survived", "y_hat"]).ID.count().reset_index(drop=False)
+		res_table["perc"] = np.around(res_table.ID / res_table.ID.sum() * 100,1)
+
+		return render_template('evaluate.html',  tables=[res_table.to_html(classes='res_table')], titles=res_table.columns.values)
 
 
 @app.route('/predict', methods=['POST'])
@@ -118,34 +128,6 @@ def get_viz_dataset():
 		return render_template('viz_dataset.html',  tables=[data.to_html(classes='data')], titles=data.columns.values)
 
 
-@app.route('/varimportplot.png')
-def plot_png():
-    fig = create_figure()
-    output = io.BytesIO()
-    FigureCanvas(fig).print_png(output)
-    return Response(output.getvalue(), mimetype='image/png')
-
-def create_figure():
-    fig = Figure()
-    axis = fig.add_subplot(1, 1, 1)
-    xs = range(100)
-    ys = [random.randint(1, 50) for x in xs]
-    axis.plot(xs, ys)
-    return fig
-
-
-#def create_figure(xs, ys):
-#    fig = Figure()
-#    xs = ["A","B","C","D","E","F"]
-#    ys = [2,4,3,5,4,6]
-#    ax = fig.add_subplot(1, 1, 1)
-#    ax.barh(xs, ys)
-#    ax.set_xlabel('Performance')
-#    ax.set_ylabel('Top Features \n Descending order')
-#    ax.set_title('How fast do you want to go today?')
-#    return fig
-
-
 @app.route('/var_importance', methods=['POST'])
 def get_var_importance():
 
@@ -176,12 +158,13 @@ def get_var_importance():
 		features = features.sort_values(by="importance", ascending=True).reset_index(drop=False)
 		features = features.head()
 		
-
+		# 4. Define viz
 		plt.barh(list(features['feature'].values), list(features['importance'].values))
 		plt.xlabel('Performance')
 		plt.ylabel('Top Features \n Descending order')
 		plt.title('How fast do you want to go today?')
 
+		# 5. Save and render
 		img = io.BytesIO()
 		plt.savefig(img, format='png')
 		img.seek(0)
@@ -191,9 +174,5 @@ def get_var_importance():
 
 if __name__ == '__main__':
 	from models.gridCV.model_pipeline import PreProcessing, FeatEngineering, FeatSelection
-	
-	#parser = argparse.ArgumentParser()
-	#parser.add_argument("-ml")
-	#args = parser.parse_args()
 	
 	app.run(host='0.0.0.0', port=8000, debug=True)

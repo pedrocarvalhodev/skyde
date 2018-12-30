@@ -16,9 +16,10 @@
     <h1>Evaluate model performance</h1>
     <h2>Choose train data and run model</h2>
     <h3>-------------</h3>
-    <form action="/train" method="post" enctype="multipart/form-data">
-      <input type="file" accept=".csv" name="train_dataset" value="Upload dataset">
-      <input type="submit" value="Train"> {% if label %} {{ label }} {% endif %}
+    <form action="/evaluate" method="post" enctype="multipart/form-data">
+      <input type="file" accept=".csv" name="y_test" value="Upload dataset">
+      <input type="file" accept=".csv" name="y_hat" value="Upload dataset">
+      <input type="submit" value="Evaluate"> {% for table in tables %} {{titles[loop.index]}} {{ table|safe }} {% endfor %}
     </form>
 
     </div>

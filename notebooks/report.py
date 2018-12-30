@@ -7,7 +7,7 @@
 
 
 
-# In[16]:
+# In[1]:
 
 
 import numpy as np
@@ -16,7 +16,7 @@ import dill as pickle
 from sklearn.metrics import confusion_matrix
 
 
-# In[43]:
+# In[2]:
 
 
 #path = "/home/pedro/repos/ml_web_api/ml-app-model/data/gridCV/"
@@ -39,60 +39,38 @@ from sklearn.metrics import confusion_matrix
 
 
 
-# In[33]:
+# In[3]:
 
 
-path = "/home/pedro/repos/ml_web_api/ml-app-model/data/gridCV/"
 
 
-# In[34]:
+
+# In[4]:
 
 
-y_hat = pd.read_csv(path+"prediction_results.csv")
+
 y_hat.shape
 
 
-# In[35]:
+# In[5]:
 
+
+
+y_test.shape
+
+
+# In[12]:
+
+
+path = "/home/pedro/repos/ml_web_api/ml-app-model/data/gridCV/"
+y_hat = pd.read_csv(path+"prediction_results.csv")
 
 y_test = pd.read_csv(path+"train.csv")
 y_test = y_test.reset_index(drop=False)
 y_test =y_test[["index","Survived"]].copy()
-y_test.shape
-
-
-# In[36]:
-
 
 res = y_test.merge(y_hat, left_on="index", right_on="ID", how="inner")
-
-
-# In[37]:
-
-
 res = res[["ID","Survived", "y_hat"]]
-
-
-# In[39]:
-
-
-res.head(2)
-
-
-# In[ ]:
-
-
-
-
-
-# In[40]:
-
-
-confusion_matrix(y_true=res.Survived, y_pred=res.y_hat)
-
-
-# In[41]:
-
 
 res_table = res.groupby(["Survived", "y_hat"]).ID.count().reset_index(drop=False)
 res_table["perc"] = np.around(res_table.ID / res_table.ID.sum() * 100,1)
@@ -100,6 +78,24 @@ res_table
 
 
 # In[ ]:
+
+
+
+
+
+# In[9]:
+
+
+confusion_matrix(y_true=res.Survived, y_pred=res.y_hat)
+
+
+# In[10]:
+
+
+
+
+
+# In[11]:
 
 
 #Survived	y_hat	ID	perc
