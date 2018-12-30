@@ -16,10 +16,15 @@
     <h2>Top 5 fields</h2>
     <form action="/var_importance" method="post" enctype="multipart/form-data">
     <input type="file" accept=".csv" name="dataset" value="Upload dataset">
-    
-    <input type="submit" value="Viz"> {% for table in tables %} {{titles[loop.index]}} {{ table|safe }} {% endfor %}
+    <input type="text" name="target_var" value="Select target">
+    <input type="submit" value="Viz">
     
     </form>
+
+    <img src="data:image/png;base64, {{ plot_url }}">
+
+    <!-- <input type="submit" value="Viz"> {% for table in tables %} {{titles[loop.index]}} {{ table|safe }} {% endfor %} -->
+    
 
     </div>
     {% endblock %}

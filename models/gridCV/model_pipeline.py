@@ -10,7 +10,7 @@ from sklearn.externals import joblib
 from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.feature_selection import SelectFromModel
 from sklearn.base import BaseEstimator, TransformerMixin
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 
 from sklearn.pipeline import make_pipeline
 warnings.filterwarnings("ignore")

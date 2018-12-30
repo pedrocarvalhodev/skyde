@@ -1,4 +1,6 @@
 import io
+import base64
+
 import argparse
 import flask
 from flask import Flask, request, render_template
@@ -6,7 +8,11 @@ import dill as pickle
 import numpy as np
 import pandas as pd
 from sklearn.externals import joblib
+from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 
+from matplotlib import pyplot as plt
+import seaborn as sns
+sns.set_style("dark") #E.G.
 
 app = Flask(__name__)
 
@@ -102,20 +108,29 @@ def get_viz_dataset():
 		data = pd.read_csv(io.BytesIO(data), encoding='utf-8', sep=",")
 		data = data.head()
 
-		return render_template('index.html',  tables=[data.to_html(classes='data')], titles=data.columns.values)
+		return render_template('viz_dataset.html',  tables=[data.to_html(classes='data')], titles=data.columns.values)
 
 
 @app.route('/var_importance', methods=['POST'])
 def get_var_importance():
 	if request.method=='POST':
+		
 		data_file = request.files['dataset']
 		data = data_file.read()
 		data = pd.read_csv(io.BytesIO(data), encoding='utf-8', sep=",")
-		#data = data.head()
+		df = data.drop("PassengerId", axis=1)
+
+		df = df.select_dtypes(include=[np.number]).copy()
+		df = df.dropna().astype(float)
+
+		y = str(request.form['target_var'])
+		print("target: ", y)
+		X = [x for x in df.columns if x != y]
 
 		clf = RandomForestClassifier(n_estimators=50, max_features='sqrt')
 		df_X = df[X].copy()
 		df_X['randomVar'] = np.random.randint(1, 6, df_X.shape[0])
+
 		clf = clf.fit(df_X, df[y])
 		features = pd.DataFrame()
 		features['feature'] = df_X.columns
@@ -125,7 +140,24 @@ def get_var_importance():
 		features = features.sort_values(by="importance", ascending=False).reset_index(drop=False)
 		features = features.head()
 
-		return render_template('index.html',  tables=[features.to_html(classes='features')], titles=features.columns.values)
+		#features.set_index('feature', inplace=True)
+		#features.plot(kind='barh', figsize=(25, 25))
+		img = io.BytesIO()
+
+		fig = plt.figure()
+		ax = fig.add_subplot(111)
+		ax.bar(features['feature'], features['importance'], align='center', alpha=0.5)
+
+		#plt.bar(x=features['importance'], height=10, width=5)
+		#plt.bar(features['feature'], features['importance'], align='center', alpha=0.5)
+		
+		#plt.savefig(img, format='png')
+		fig.savefig(img, format='png')
+		
+		img.seek(0)
+		plot_url = base64.b64encode(img.getvalue())
+		return render_template('var_importance.html', plot_url=plot_url)
+		#return render_template('var_importance.html',  tables=[features.to_html(classes='features')], titles=features.columns.values)
 
 
 if __name__ == '__main__':
