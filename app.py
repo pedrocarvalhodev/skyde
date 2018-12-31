@@ -7,6 +7,7 @@ from flask import Flask, request, render_template
 import dill as pickle
 import numpy as np
 import pandas as pd
+import models.gridCV.model_pipeline  as model_gridCV
 from sklearn.externals import joblib
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 
@@ -50,17 +51,9 @@ def viz_dataset():
 def var_importance():
     return flask.render_template('var_importance.html')
 
-
-@app.route('/train', methods=['POST'])
-def run_model_train():
-	if request.method=='POST':
-		data_file = request.files['dataset']
-		data = data_file.read()
-		data = pd.read_csv(io.BytesIO(data), encoding='utf-8', sep=",")
-		#data = data.head()
-		## model_pipeline (train.csv) -> download pickle model
-
-		return render_template('train.html',  tables=[data.to_html(classes='data')], titles=data.columns.values)
+@app.route('/close/')
+def close():
+    return flask.render_template('close.html')
 
 
 @app.route('/evaluate', methods=['POST'])
@@ -129,6 +122,35 @@ def get_viz_dataset():
 		return render_template('viz_dataset.html',  tables=[data.to_html(classes='data')], titles=data.columns.values)
 
 
+@app.route('/train', methods=['POST'])
+def train_model():
+	if request.method=='POST':
+		data_file = request.files['train_dataset']
+		data = data_file.read()
+		train = pd.read_csv(io.BytesIO(data), encoding='utf-8', sep=",")
+		y = str(request.form['target_var'])
+
+		model = model_gridCV.ml_pipeline(train=train, target=y)
+		filename = 'gridCV.pk'
+		print(model_gridCV.path)
+		with open(model_gridCV.path+filename, 'wb') as file:
+			pickle.dump(model, file)
+
+		return render_template('train.html', label="Training processed. Check folder for pickle file.")
+
+
+#@app.route('/train', methods=['POST'])
+#def run_model_train():
+#	if request.method=='POST':
+#		data_file = request.files['train_dataset']
+#		data = data_file.read()
+#		data = pd.read_csv(io.BytesIO(data), encoding='utf-8', sep=",")
+#		#data = data.head()
+#		## model_pipeline (train.csv) -> download pickle model
+#
+#		return render_template('train.html',  tables=[data.to_html(classes='data')], titles=data.columns.values)
+
+
 @app.route('/var_importance', methods=['POST'])
 def get_var_importance():
 
@@ -173,7 +195,22 @@ def get_var_importance():
 		return '<img src="data:image/png;base64,{}">'.format(plot_url)
 
 
+def shutdown_server():
+    func = request.environ.get('werkzeug.server.shutdown')
+    if func is None:
+        raise RuntimeError('Not running with the Werkzeug Server')
+    func()
+
+@app.route('/close', methods=['POST'])
+def shutdown():
+	if request.method=='POST':
+		print(request.form['submit_button'])
+		if request.form['submit_button'] == 'Close':
+			shutdown_server()
+			return 'Server shutting down...'
+
+
 if __name__ == '__main__':
-	from models.gridCV.model_pipeline import PreProcessing, FeatEngineering, FeatSelection
+	from models.gridCV.model_pipeline import PreProcessing, FeatEngineering, FeatSelection, CustomPreProcessing
 	
 	app.run(host='0.0.0.0', port=8000, debug=True)

@@ -12,6 +12,8 @@ from sklearn.feature_selection import SelectFromModel
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 
+from models.gridCV.preprocess import CustomPreProcessing
+
 from sklearn.pipeline import make_pipeline
 warnings.filterwarnings("ignore")
 
@@ -36,7 +38,7 @@ def ml_pipeline(train, target):
 	y_test = y_test.as_matrix()
 
 	# 3. Set pipeline
-	pipe = make_pipeline(PreProcessing(),
+	pipe = make_pipeline(CustomPreProcessing(),
 						 FeatEngineering(),
 						 FeatSelection(),
 						 RandomForestClassifier())
