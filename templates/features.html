@@ -13,19 +13,12 @@
 
     <div class="train">
 
-    <h1>Train model</h1>
-    <h2>Choose train data and run model</h2>
+    <h1>Features</h1>
+    <h2>Process dataset for feat-eng</h2>
     <h3>-------------</h3>
-    <form action="/train" method="post" enctype="multipart/form-data">
+    <form action="/features" method="post" enctype="multipart/form-data">
       Select Dataset: <input type="file" accept=".csv" name="train_dataset" value="Upload dataset"><br>
-      
-      Select ML Type: <select name="ml_type">
-        <option value="Regressor">Regressor</option>
-        <option value="Classifier">Classifier</option>
-      </select><br>
-
-      <!--Target metric: <input type="text" name="target_var" value="Select target"><br> -->
-      
+            
       Target metric: <select name="target_var">
         <option value="Survived">Survived</option>
         <option value="Fare">Fare</option>
@@ -34,7 +27,7 @@
 
       <h3>-------------</h3>
 
-      Run process: <input type="submit" value="Train"> {% if label %} {{ label }} {% endif %}
+      Run process: <input type="submit" value="Features"> {% if label %} {{ label }} {% endif %}
     </form>
 
     </div>

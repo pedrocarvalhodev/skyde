@@ -14,11 +14,12 @@
       <body>
       <strong><nav>
           <ul id="list">
-            <li class="horizontal first"><a href="{{ url_for('index') }}">Home</a></li>
+            <li class="horizontal first"><a href="{{ url_for('home') }}">Home</a></li>
             <li class="horizontal"><a href="{{ url_for('about') }}">About</a></li>
             <li class="horizontal"><a href="{{ url_for('viz_dataset') }}">Viz Dataset</a></li>
             <li class="horizontal"><a href="{{ url_for('report') }}">Notebook</a></li>
-            <li class="horizontal"><a href="{{ url_for('var_importance') }}">Var Importance</a></li>
+            <li class="horizontal"><a href="{{ url_for('features') }}">Features</a></li>
+            <li class="horizontal"><a href="{{ url_for('var_importance') }}">Selection</a></li>
             <li class="horizontal"><a href="{{ url_for('train') }}">Train</a></li>
             <li class="horizontal"><a href="{{ url_for('predict') }}">Predict</a></li>
             <li class="horizontal"><a href="{{ url_for('evaluate') }}">Evaluate</a></li>

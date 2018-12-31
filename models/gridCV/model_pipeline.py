@@ -36,8 +36,8 @@ def ml_pipeline(train, target, ml_type):
 	X = [x for x in train.columns if x != target]
 	X_train, X_test, y_train, y_test = train_test_split(train[X], train[y], test_size=0.5, random_state=42)
 	print("Shape: ", X_train.shape, X_test.shape, y_train.shape, y_test.shape)
-	y_train = y_train.as_matrix()
-	y_test = y_test.as_matrix()
+	y_train = y_train.reset_index(drop=False)
+	y_train.drop("Unnamed: 0", axis=1, inplace=True)
 
 
 
@@ -56,7 +56,7 @@ def ml_pipeline(train, target, ml_type):
 					 "randomforestclassifier__min_impurity_split": [0.1, 0.2, 0.3]}
 
 		grid = GridSearchCV(pipe, param_grid=param_grid, cv=3)
-		grid.fit(X_train, y_train)
+		grid.fit(X_train, y_train.as_matrix())
 		return(grid)
 
 	elif ml_type == "Regressor":
@@ -75,7 +75,7 @@ def ml_pipeline(train, target, ml_type):
 					  "randomforestregressor__bootstrap": [True, False]}
 
 		grid = GridSearchCV(pipe, param_grid=param_grid, cv=3)
-		grid.fit(X_train, y_train)
+		grid.fit(X_train, y_train.as_matrix())
 		return(grid)
 
 	elif ml_type == "Features":
@@ -90,7 +90,8 @@ def ml_pipeline(train, target, ml_type):
 		X_train = FeatSelectionInst.transform(df=X_train)
 		#X_train.to_csv(path+"features_data.csv")
 		print("Downloaded features data.")
-		return X_train
+		df_train = X_train.merge(y_train[y].to_frame(), left_index=True, right_index=True)
+		return X_train, y_train
 	
 	else:
 		print("Warning: ml_type error")

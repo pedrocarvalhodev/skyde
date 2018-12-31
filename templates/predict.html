@@ -17,9 +17,10 @@
     <h2>Choose 1. model and 2. data to predict</h2>
 	  <h3>-------------</h3>
     <form action="/predict" method="post" enctype="multipart/form-data">
-      <input type="file" accept=".pk" name="model" value="Upload model">
-      <input type="file" accept=".csv" name="dataset" value="Upload dataset">
-      <input type="submit" value="Predict"> {% if label %} {{ label }} {% endif %}
+      Upload model: <input type="file" accept=".pk" name="model" value="Upload model"><br>
+      Upload dataset: <input type="file" accept=".csv" name="dataset" value="Upload dataset"><br>
+      <h3>-------------</h3>
+      Run model <input type="submit" value="Predict"> {% if label %} {{ label }} {% endif %}
     </form>
 
     </div>

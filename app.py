@@ -19,9 +19,9 @@ sns.set_style("dark")
 app = flask.Flask(__name__)
 
 @app.route("/")
-@app.route("/index")
-def index():
-	return flask.render_template('index.html')
+@app.route("/home")
+def home():
+	return flask.render_template('home.html')
 
 @app.route('/about/')
 def about():
@@ -52,6 +52,10 @@ def viz_dataset():
 def var_importance():
     return flask.render_template('var_importance.html')
 
+@app.route('/features/')
+def features():
+    return flask.render_template('features.html')
+
 @app.route('/close/')
 def close():
     return flask.render_template('close.html')
@@ -73,13 +77,27 @@ def evaluate_model():
 		y_test = y_test.reset_index(drop=False)
 		y_test =y_test[["index",y]].copy()
 
-		res = y_test.merge(y_hat, left_on="index", right_on="ID", how="inner")
-		res = res[["ID",y, "y_hat"]]
+		# 3. Run Variable Importance
+		ml_type = str(flask.request.form['ml_type'])
+		if ml_type == "Classifier":
+			# Merge test & predicted, return confusion matrix
+			res = y_test.merge(y_hat, left_on="index", right_on="ID", how="inner")
+			res = res[["ID",y, "y_hat"]]
 
-		res_table = res.groupby([y, "y_hat"]).ID.count().reset_index(drop=False)
-		res_table["perc"] = np.around(res_table.ID / res_table.ID.sum() * 100,1)
+			res_table = res.groupby([y, "y_hat"]).ID.count().reset_index(drop=False)
+			res_table["perc"] = np.around(res_table.ID / res_table.ID.sum() * 100,1)
+
+			#return flask.render_template('evaluate.html',  tables=[res_table.to_html(classes='res_table')], titles=res_table.columns.values)
+		
+		if ml_type == "Regressor":
+			res = y_test.merge(y_hat, left_on="index", right_on="ID", how="inner")
+			res = res[["ID",y, "y_hat"]]
+			rmse = ((res["y_hat"] - res[y]) ** 2).mean() ** .5
+			res_table = pd.DataFrame({"rmse":rmse}, index=["evaluation result"])
 
 		return flask.render_template('evaluate.html',  tables=[res_table.to_html(classes='res_table')], titles=res_table.columns.values)
+
+
 
 
 @app.route('/predict', methods=['POST'])
@@ -93,22 +111,17 @@ def make_prediction():
 
 		# 2. Get model
 		model_file = flask.request.files['model']
-		
-		#model = joblib.load(model_file)
-		# Pratos pickle
 		model = pickle.load(model_file)
 
-		# 2. Predict and save results
+		# 3. Predict and save results
 		prediction = model.predict(data)
 		prediction_output = pd.DataFrame(prediction).reset_index(drop=False)
 		prediction_output.columns = ["ID", "y_hat"]
-		#output_path = f"data/{args.ml}/prediction_results.csv"
-		output_path = f"data/gridCV/prediction_results.csv"
 		
-		prediction_output.to_csv(output_path, index=False)
-		print(output_path, prediction_output.head())
+		prediction_output.to_csv(f"{model_gridCV.path}y_hat.csv")
+		print(model_gridCV.path, prediction_output.head())
 
-		# 3. Render results from prediction method
+		# 4. Render results from prediction method
 		return flask.render_template('predict.html', label="Prediction processed. Check folder for results.")
 
 
@@ -133,17 +146,26 @@ def train_model():
 		ml_type = str(flask.request.form['ml_type'])
 
 		model = model_gridCV.ml_pipeline(train=train, target=y, ml_type=ml_type)
-		if ml_type == "Features":
-			print("ml_type", ml_type)
-			model.to_csv(f"{model_gridCV.path}features_data.csv")
-		else:
-			print("ml_type", ml_type)
-			print(model_gridCV.path)
-			file_path_name = f"{model_gridCV.path}gridCV_{ml_type}_{y}.pk"
-			with open(file_path_name, 'wb') as file:
-				pickle.dump(model, file)
+		file_path_name = f"{model_gridCV.path}gridCV_{ml_type}_{y}.pk"
+		with open(file_path_name, 'wb') as file:
+			pickle.dump(model, file)
 
 		return flask.render_template('train.html', label="Training processed. Check folder for pickle file.")
+
+
+@app.route('/features', methods=['POST'])
+def features_model():
+	if flask.request.method=='POST':
+		data_file = flask.request.files['train_dataset']
+		data = data_file.read()
+
+		train = pd.read_csv(io.BytesIO(data), encoding='utf-8', sep=",")
+		y = str(flask.request.form['target_var'])
+
+		X_train, y_train = model_gridCV.ml_pipeline(train=train, target=y, ml_type="Features")
+		X_train.to_csv(f"{model_gridCV.path}features_data.csv")
+		y_train.to_csv(f"{model_gridCV.path}y_features_train.csv")
+		return flask.render_template('features.html', label="Features dataset processed. Check data folder for csv file.")
 
 
 @app.route('/var_importance', methods=['POST'])
