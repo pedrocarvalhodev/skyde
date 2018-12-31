@@ -18,7 +18,13 @@
     <h3>-------------</h3>
     <form action="/evaluate" method="post" enctype="multipart/form-data">
       Test dataset: <input type="file" accept=".csv" name="test" value="Upload dataset">
-      Target metric: <input type="text" name="target_var" value="Select target"><br>
+      <!--Target metric: <input type="text" name="target_var" value="Select target"><br> -->
+
+      Target metric: <select name="target_var">
+        <option value="Survived">Survived</option>
+        <option value="Fare">Fare</option>
+      </select><br>
+
       Predicted Results: <input type="file" accept=".csv" name="y_hat" value="Upload dataset"><br>
       <input type="submit" value="Evaluate"> {% for table in tables %} {{titles[loop.index]}} {{ table|safe }} {% endfor %}
     </form>

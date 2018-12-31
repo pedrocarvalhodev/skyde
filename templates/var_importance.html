@@ -16,7 +16,19 @@
     <h2>Top 5 fields</h2>
     <form action="/var_importance" method="post" enctype="multipart/form-data">
     <input type="file" accept=".csv" name="dataset" value="Upload dataset">
-    <input type="text" name="target_var" value="Select target">
+
+    Select ML Type: <select name="ml_type">
+        <option value="Regressor">Regressor</option>
+        <option value="Classifier">Classifier</option>
+      </select><br>
+
+    <!-- <input type="text" name="target_var" value="Select target"> -->
+
+    Target metric: <select name="target_var">
+        <option value="Survived">Survived</option>
+        <option value="Fare">Fare</option>
+      </select><br>
+
     <input type="submit" value="Viz">
     </form>
     <img src="data:image/png;base64, {{ plot_url }}">

@@ -18,7 +18,7 @@ class FeatSelection(BaseEstimator, TransformerMixin):
 				df[x] = 0.0
 
 		df = df[main_vars].copy()
-		return df.as_matrix()
+		return df
 
 	def fit(self, X, y=None, **fit_params):
 		return self

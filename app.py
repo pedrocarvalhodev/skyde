@@ -33,7 +33,8 @@ def report():
 
 @app.route('/train/')
 def train():
-    return flask.render_template('train.html')
+	#ml_types = ['Regressor', 'Classifier']
+	return flask.render_template('train.html')#, ml_types=ml_types)
 
 @app.route('/evaluate/')
 def evaluate():
@@ -129,12 +130,18 @@ def train_model():
 		data = data_file.read()
 		train = pd.read_csv(io.BytesIO(data), encoding='utf-8', sep=",")
 		y = str(flask.request.form['target_var'])
+		ml_type = str(flask.request.form['ml_type'])
 
-		model = model_gridCV.ml_pipeline(train=train, target=y)
-		filename = 'gridCV'
-		print(model_gridCV.path)
-		with open(model_gridCV.path+filename + '_' + y + '.pk', 'wb') as file:
-			pickle.dump(model, file)
+		model = model_gridCV.ml_pipeline(train=train, target=y, ml_type=ml_type)
+		if ml_type == "Features":
+			print("ml_type", ml_type)
+			model.to_csv(f"{model_gridCV.path}features_data.csv")
+		else:
+			print("ml_type", ml_type)
+			print(model_gridCV.path)
+			file_path_name = f"{model_gridCV.path}gridCV_{ml_type}_{y}.pk"
+			with open(file_path_name, 'wb') as file:
+				pickle.dump(model, file)
 
 		return flask.render_template('train.html', label="Training processed. Check folder for pickle file.")
 
@@ -147,8 +154,7 @@ def get_var_importance():
 		# 1. Get and clean dataset
 		data_file = flask.request.files['dataset']
 		data = data_file.read()
-		data = pd.read_csv(io.BytesIO(data), encoding='utf-8', sep=",")
-		df = data.drop("PassengerId", axis=1)
+		df = pd.read_csv(io.BytesIO(data), encoding='utf-8', sep=",")
 		df = df.select_dtypes(include=[np.number]).copy()
 		df = df.dropna().astype(float)
 
@@ -160,14 +166,19 @@ def get_var_importance():
 		df_X['randomVar'] = np.random.randint(1, 6, df_X.shape[0])
 
 		# 3. Run Variable Importance
-		clf = RandomForestClassifier(n_estimators=50, max_features='sqrt')
-		clf = clf.fit(df_X, df[y])
+		ml_type = str(flask.request.form['ml_type'])
+		if ml_type == "Classifier":
+			clf = RandomForestClassifier(n_estimators=50, max_features='sqrt')
+			clf = clf.fit(df_X, df[y])
+		if ml_type == "Regressor":
+			clf = RandomForestRegressor(n_estimators=50, max_features='sqrt')
+			clf = clf.fit(df_X, df[y])
 		features = pd.DataFrame()
 		features['feature'] = df_X.columns
 		features['importance'] = clf.feature_importances_
 		features.sort_values(by=['importance'], ascending=True, inplace=True)
 		features = features.sort_values(by="importance", ascending=True).reset_index(drop=False)
-		features = features.head()
+		features = features.head(10)
 		
 		# 4. Define viz
 		plt.barh(list(features['feature'].values), list(features['importance'].values))
