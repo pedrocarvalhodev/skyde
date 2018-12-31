@@ -11,19 +11,23 @@
 {% extends "layout.html" %}
 {% block content %}
 
-    <div class="train">
+	<div class="train">
+		<h1>Evaluate model performance</h1>
+		<h2>Choose train data and run model</h2>
+		<h3>------------------------</h3>
+		<h4>Select test and predicted data</h4>
+		<form action="/evaluate" method="post" enctype="multipart/form-data">
+			Test data results :  <input type="file" accept=".csv" name="test" value="Upload dataset">
+			Target metric: <input type="text" name="target_var" value="Select target"><br>
+			Predicted results: <input type="file" accept=".csv" name="y_hat" value="Upload dataset"><br>
+			See results table: <input type="submit" value="Evaluate">
+		</form>
+		<h3>------------------------</h3>
+		<h4>Evaluation results table</h4>
+		{% for table in tables %} {{titles[loop.index]}} {{ table|safe }} {% endfor %}
 
-    <h1>Evaluate model performance</h1>
-    <h2>Choose train data and run model</h2>
-    <h3>-------------</h3>
-    <form action="/evaluate" method="post" enctype="multipart/form-data">
-      <input type="file" accept=".csv" name="y_test" value="Upload dataset">
-      <input type="file" accept=".csv" name="y_hat" value="Upload dataset">
-      <input type="submit" value="Evaluate"> {% for table in tables %} {{titles[loop.index]}} {{ table|safe }} {% endfor %}
-    </form>
-
-    </div>
-    {% endblock %}
+	</div>
+	{% endblock %}
 
 </body>
 

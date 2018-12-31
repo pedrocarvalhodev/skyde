@@ -66,8 +66,8 @@ def run_model_train():
 @app.route('/evaluate', methods=['POST'])
 def evaluate_model():
 	if request.method=='POST':
-		y_test = request.files['y_test']
-		y_test = y_test.read()
+		data = request.files['test']
+		y_test = data.read()
 		y_test = pd.read_csv(io.BytesIO(y_test), encoding='utf-8', sep=",")
 
 		y_hat = request.files['y_hat']
@@ -75,13 +75,14 @@ def evaluate_model():
 		y_hat = pd.read_csv(io.BytesIO(y_hat), encoding='utf-8', sep=",")
 
 		# y_test (train), y_hat (predicted results)
+		y = str(request.form['target_var'])
 		y_test = y_test.reset_index(drop=False)
-		y_test =y_test[["index","Survived"]].copy()
+		y_test =y_test[["index",y]].copy()
 
 		res = y_test.merge(y_hat, left_on="index", right_on="ID", how="inner")
-		res = res[["ID","Survived", "y_hat"]]
+		res = res[["ID",y, "y_hat"]]
 
-		res_table = res.groupby(["Survived", "y_hat"]).ID.count().reset_index(drop=False)
+		res_table = res.groupby([y, "y_hat"]).ID.count().reset_index(drop=False)
 		res_table["perc"] = np.around(res_table.ID / res_table.ID.sum() * 100,1)
 
 		return render_template('evaluate.html',  tables=[res_table.to_html(classes='res_table')], titles=res_table.columns.values)
