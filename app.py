@@ -1,13 +1,13 @@
 import io
 import base64
-
 import argparse
+
 import flask
-from flask import Flask, request, render_template
+#from flask import Flask, request, render_template
+
 import dill as pickle
 import numpy as np
 import pandas as pd
-import models.gridCV.model_pipeline  as model_gridCV
 from sklearn.externals import joblib
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 
@@ -16,7 +16,7 @@ from matplotlib import pyplot as plt
 import seaborn as sns
 sns.set_style("dark")
 
-app = Flask(__name__)
+app = flask.Flask(__name__)
 
 @app.route("/")
 @app.route("/index")
@@ -58,17 +58,17 @@ def close():
 
 @app.route('/evaluate', methods=['POST'])
 def evaluate_model():
-	if request.method=='POST':
-		data = request.files['test']
+	if flask.request.method=='POST':
+		data = flask.request.files['test']
 		y_test = data.read()
 		y_test = pd.read_csv(io.BytesIO(y_test), encoding='utf-8', sep=",")
 
-		y_hat = request.files['y_hat']
+		y_hat = flask.request.files['y_hat']
 		y_hat = y_hat.read()
 		y_hat = pd.read_csv(io.BytesIO(y_hat), encoding='utf-8', sep=",")
 
 		# y_test (train), y_hat (predicted results)
-		y = str(request.form['target_var'])
+		y = str(flask.request.form['target_var'])
 		y_test = y_test.reset_index(drop=False)
 		y_test =y_test[["index",y]].copy()
 
@@ -78,20 +78,20 @@ def evaluate_model():
 		res_table = res.groupby([y, "y_hat"]).ID.count().reset_index(drop=False)
 		res_table["perc"] = np.around(res_table.ID / res_table.ID.sum() * 100,1)
 
-		return render_template('evaluate.html',  tables=[res_table.to_html(classes='res_table')], titles=res_table.columns.values)
+		return flask.render_template('evaluate.html',  tables=[res_table.to_html(classes='res_table')], titles=res_table.columns.values)
 
 
 @app.route('/predict', methods=['POST'])
 def make_prediction():
-	if request.method=='POST':
+	if flask.request.method=='POST':
 		# 1. Get data from request 
-		data_file = request.files['dataset']
+		data_file = flask.request.files['dataset']
 		print(data_file)
 		data = data_file.read()
 		data = pd.read_csv(io.BytesIO(data), encoding='utf-8', sep=",")
 
 		# 2. Get model
-		model_file = request.files['model']
+		model_file = flask.request.files['model']
 		
 		#model = joblib.load(model_file)
 		# Pratos pickle
@@ -108,56 +108,44 @@ def make_prediction():
 		print(output_path, prediction_output.head())
 
 		# 3. Render results from prediction method
-		return render_template('predict.html', label="Prediction processed. Check folder for results.")
+		return flask.render_template('predict.html', label="Prediction processed. Check folder for results.")
 
 
 @app.route('/viz_dataset', methods=['POST'])
 def get_viz_dataset():
-	if request.method=='POST':
-		data_file = request.files['dataset']
+	if flask.request.method=='POST':
+		data_file = flask.request.files['dataset']
 		data = data_file.read()
 		data = pd.read_csv(io.BytesIO(data), encoding='utf-8', sep=",")
 		data = data.head()
 
-		return render_template('viz_dataset.html',  tables=[data.to_html(classes='data')], titles=data.columns.values)
+		return flask.render_template('viz_dataset.html',  tables=[data.to_html(classes='data')], titles=data.columns.values)
 
 
 @app.route('/train', methods=['POST'])
 def train_model():
-	if request.method=='POST':
-		data_file = request.files['train_dataset']
+	if flask.request.method=='POST':
+		data_file = flask.request.files['train_dataset']
 		data = data_file.read()
 		train = pd.read_csv(io.BytesIO(data), encoding='utf-8', sep=",")
-		y = str(request.form['target_var'])
+		y = str(flask.request.form['target_var'])
 
 		model = model_gridCV.ml_pipeline(train=train, target=y)
-		filename = 'gridCV.pk'
+		filename = 'gridCV'
 		print(model_gridCV.path)
-		with open(model_gridCV.path+filename, 'wb') as file:
+		with open(model_gridCV.path+filename + '_' + y + '.pk', 'wb') as file:
 			pickle.dump(model, file)
 
-		return render_template('train.html', label="Training processed. Check folder for pickle file.")
-
-
-#@app.route('/train', methods=['POST'])
-#def run_model_train():
-#	if request.method=='POST':
-#		data_file = request.files['train_dataset']
-#		data = data_file.read()
-#		data = pd.read_csv(io.BytesIO(data), encoding='utf-8', sep=",")
-#		#data = data.head()
-#		## model_pipeline (train.csv) -> download pickle model
-#
-#		return render_template('train.html',  tables=[data.to_html(classes='data')], titles=data.columns.values)
+		return flask.render_template('train.html', label="Training processed. Check folder for pickle file.")
 
 
 @app.route('/var_importance', methods=['POST'])
 def get_var_importance():
 
-	if request.method=='POST':
+	if flask.request.method=='POST':
 
 		# 1. Get and clean dataset
-		data_file = request.files['dataset']
+		data_file = flask.request.files['dataset']
 		data = data_file.read()
 		data = pd.read_csv(io.BytesIO(data), encoding='utf-8', sep=",")
 		df = data.drop("PassengerId", axis=1)
@@ -165,7 +153,7 @@ def get_var_importance():
 		df = df.dropna().astype(float)
 
 		# 2. Get y, X fields
-		y = str(request.form['target_var'])
+		y = str(flask.request.form['target_var'])
 		print("target: ", y)
 		X = [x for x in df.columns if x != y]
 		df_X = df[X].copy()
@@ -196,21 +184,22 @@ def get_var_importance():
 
 
 def shutdown_server():
-    func = request.environ.get('werkzeug.server.shutdown')
+    func = flask.request.environ.get('werkzeug.server.shutdown')
     if func is None:
         raise RuntimeError('Not running with the Werkzeug Server')
     func()
 
 @app.route('/close', methods=['POST'])
 def shutdown():
-	if request.method=='POST':
-		print(request.form['submit_button'])
-		if request.form['submit_button'] == 'Close':
+	if flask.request.method=='POST':
+		print(flask.request.form['submit_button'])
+		if flask.request.form['submit_button'] == 'Close':
 			shutdown_server()
 			return 'Server shutting down...'
 
 
 if __name__ == '__main__':
-	from models.gridCV.model_pipeline import PreProcessing, FeatEngineering, FeatSelection, CustomPreProcessing
+	import models.gridCV.model_pipeline as model_gridCV
+	from models.gridCV.model_pipeline import PreProcessing, FeatEngineering, FeatSelection
 	
 	app.run(host='0.0.0.0', port=8000, debug=True)

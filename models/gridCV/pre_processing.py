@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 from sklearn.base import BaseEstimator, TransformerMixin
 
-class PreProcessing(BaseEstimator, TransformerMixin):
+class CustomPreProcessing(BaseEstimator, TransformerMixin):
 	"""Custom Pre-Processing estimator for our use-case
 	"""
 
@@ -21,6 +21,7 @@ class PreProcessing(BaseEstimator, TransformerMixin):
 			df = pd.concat([df, titles_dummies], axis=1)
 			df.drop('Title', axis=1, inplace=True)
 			return df
+
 
 		def process_fares(df):
 			df.Fare.fillna(df.Fare.median(), inplace=True)
@@ -69,6 +70,7 @@ class PreProcessing(BaseEstimator, TransformerMixin):
 			return df
 
 		df = inner_transform(df)
+		#df = df[["Sex","Age","Pclass","SibSp","Parch","Fare",'Singleton','SmallFamily','LargeFamily']].copy()
 		df = df.select_dtypes(include=[np.number]).copy()
 		df = df.astype(float)
 		return df
