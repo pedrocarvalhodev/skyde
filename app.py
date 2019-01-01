@@ -162,9 +162,10 @@ def features_model():
 		train = pd.read_csv(io.BytesIO(data), encoding='utf-8', sep=",")
 		y = str(flask.request.form['target_var'])
 
-		X_train, y_train = model_gridCV.ml_pipeline(train=train, target=y, ml_type="Features")
-		X_train.to_csv(f"{model_gridCV.path}features_data.csv")
-		y_train.to_csv(f"{model_gridCV.path}y_features_train.csv")
+		X_feat, y_feat, df_feat = model_gridCV.ml_pipeline(train=train, target=y, ml_type="Features")
+		X_feat.to_csv(f"{model_gridCV.path}features_data.csv")
+		y_feat.to_csv(f"{model_gridCV.path}y_features_train.csv")
+		df_feat.to_csv(f"{model_gridCV.path}df_feat.csv")
 		return flask.render_template('features.html', label="Features dataset processed. Check data folder for csv file.")
 
 
@@ -185,16 +186,23 @@ def get_var_importance():
 		print("target: ", y)
 		X = [x for x in df.columns if x != y]
 		df_X = df[X].copy()
-		df_X['randomVar'] = np.random.randint(1, 6, df_X.shape[0])
+		df_X['Random'] = np.random.randint(1, 6, df_X.shape[0])
+
+		for col in df_X.columns:
+			if col in ["PassengerId", "index", "Unnamed: 0"]:
+				df_X.drop(col, axis=1, inplace=True)
 
 		# 3. Run Variable Importance
 		ml_type = str(flask.request.form['ml_type'])
 		if ml_type == "Classifier":
 			clf = RandomForestClassifier(n_estimators=50, max_features='sqrt')
 			clf = clf.fit(df_X, df[y])
-		if ml_type == "Regressor":
+		elif ml_type == "Regressor":
 			clf = RandomForestRegressor(n_estimators=50, max_features='sqrt')
 			clf = clf.fit(df_X, df[y])
+		else:
+			print("Warning. ML options error")
+			return None
 		features = pd.DataFrame()
 		features['feature'] = df_X.columns
 		features['importance'] = clf.feature_importances_
@@ -203,17 +211,18 @@ def get_var_importance():
 		features = features.head(10)
 		
 		# 4. Define viz
+		plt.figure(figsize=(10,6))
 		plt.barh(list(features['feature'].values), list(features['importance'].values))
-		plt.xlabel('Performance')
+		plt.xlabel('Relative Importance')
 		plt.ylabel('Top Features \n Descending order')
-		plt.title('How fast do you want to go today?')
+		plt.title(f"Dataset features by importance \n Target: {y} \n ML method: {ml_type}")
 
 		# 5. Save and render
 		img = io.BytesIO()
 		plt.savefig(img, format='png')
 		img.seek(0)
 		plot_url = base64.b64encode(img.getvalue()).decode()
-		return '<img src="data:image/png;base64,{}">'.format(plot_url)
+		return '<center><img src="data:image/png;base64,{}"></center>'.format(plot_url)
 
 
 def shutdown_server():

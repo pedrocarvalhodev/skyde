@@ -4,7 +4,6 @@ import numpy as np
 import pandas as pd
 import dill as pickle
 
-
 from sklearn.externals import joblib
 from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.feature_selection import SelectFromModel
@@ -22,24 +21,18 @@ warnings.filterwarnings("ignore")
 
 path = "/home/pedro/repos/ml_web_api/ml-app-model/data/gridCV/"
 
-#data_path="https://raw.githubusercontent.com/ahmedbesbes/How-to-score-0.8134-in-Titanic-Kaggle-Challenge/master/data/"
-data_path="/home/pedro/repos/ml_web_api/How-to-score-0.8134-in-Titanic-Kaggle-Challenge/data/"
-
-# 2. Validate
-train = pd.read_csv(data_path+'train.csv')
-train.drop("PassengerId", axis=1, inplace=True)
-y = "Survived"
 
 def ml_pipeline(train, target, ml_type):
 
 	# 1. Define X, y and split
 	X = [x for x in train.columns if x != target]
-	X_train, X_test, y_train, y_test = train_test_split(train[X], train[y], test_size=0.5, random_state=42)
+	X_train, X_test, y_train, y_test = train_test_split(train[X], train[target], test_size=0.5, random_state=42)
 	print("Shape: ", X_train.shape, X_test.shape, y_train.shape, y_test.shape)
 	y_train = y_train.reset_index(drop=False)
-	y_train.drop("Unnamed: 0", axis=1, inplace=True)
 
-
+	for col in X_train.columns:
+		if col in ["PassengerId", "index", "Unnamed: 0"]:
+			X_train.drop(col, axis=1, inplace=True)
 
 	# 2. Set pipeline
 
@@ -79,28 +72,19 @@ def ml_pipeline(train, target, ml_type):
 		return(grid)
 
 	elif ml_type == "Features":
-		print("preprocess")
 		PreProcessingInst = PreProcessing()
-		X_train = PreProcessingInst.transform(df=X_train)
-		print("feat_eng")
 		FeatEngineeringInst = FeatEngineering()
-		X_train = FeatEngineeringInst.transform(df=X_train)
-		print("feat_selection")
 		FeatSelectionInst = FeatSelection()
-		X_train = FeatSelectionInst.transform(df=X_train)
-		#X_train.to_csv(path+"features_data.csv")
+
+		X_train = PreProcessingInst.transform(df   = X_train)
+		X_train = FeatEngineeringInst.transform(df = X_train)
+		X_train = FeatSelectionInst.transform(df   = X_train)
+
 		print("Downloaded features data.")
-		df_train = X_train.merge(y_train[y].to_frame(), left_index=True, right_index=True)
-		return X_train, y_train
+		y_train = y_train[target].to_frame()
+		df_feat = X_train.merge(y_train, left_index=True, right_index=True, how="inner")
+		return X_train, y_train, df_feat
 	
 	else:
 		print("Warning: ml_type error")
 		return None
-
-
-#if __name__ == '__main__':
-#	model = ml_pipeline(train=train, target=y, ml_type=ml_type) # include option regressor, classifiers or null for features
-#
-#	filename = 'gridCV.pk'
-#	with open(path+filename, 'wb') as file:
-#		pickle.dump(model, file)
