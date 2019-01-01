@@ -233,11 +233,8 @@ def shutdown_server():
 
 @app.route('/close', methods=['POST'])
 def shutdown():
-	if flask.request.method=='POST':
-		print(flask.request.form['submit_button'])
-		if flask.request.form['submit_button'] == 'Close':
-			shutdown_server()
-			return 'Server shutting down...'
+    shutdown_server()
+    return 'Server shutting down...'
 
 
 if __name__ == '__main__':
