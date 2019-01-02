@@ -15,8 +15,9 @@
     <h1>Check dataset</h1>
     <h2>Data sample Viz</h2>
     <form action="/viz_dataset" method="post" enctype="multipart/form-data">
-    <input type="file" accept=".csv" name="dataset" value="Upload dataset">
-    <input type="submit" value="Viz"> {% for table in tables %} {{titles[loop.index]}} {{ table|safe }} {% endfor %}
+    Dataset: <input type="file" accept=".csv" name="dataset" value="Upload dataset">
+    <h3>-------------</h3>
+    Sample : <input type="submit" value="Viz"> {% for table in tables %} {{titles[loop.index]}} {{ table|safe }} {% endfor %}
     </form>
 
     </div>

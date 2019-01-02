@@ -1,16 +1,16 @@
 import io
 import base64
-import argparse
+import sys
 
 import flask
-#from flask import Flask, request, render_template
-
 import dill as pickle
 import numpy as np
 import pandas as pd
 from sklearn.externals import joblib
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 
+import models.gridCV.model_pipeline as model_gridCV
+from models.gridCV.model_pipeline import PreProcessing, FeatEngineering, FeatSelection
 
 from matplotlib import pyplot as plt
 import seaborn as sns
@@ -79,13 +79,14 @@ def evaluate_model():
 
 		# 3. Run Variable Importance
 		ml_type = str(flask.request.form['ml_type'])
-		if ml_type == "Classifier":
+		if ml_type in ["Classifier", "LogisticRegression"]:
 			# Merge test & predicted, return confusion matrix
 			res = y_test.merge(y_hat, left_on="index", right_on="ID", how="inner")
 			res = res[["ID",y, "y_hat"]]
 
 			res_table = res.groupby([y, "y_hat"]).ID.count().reset_index(drop=False)
 			res_table["perc"] = np.around(res_table.ID / res_table.ID.sum() * 100,1)
+			res_table.to_csv(f"{model_gridCV.path}model_eval_{y}_{ml_type}.csv")
 
 			#return flask.render_template('evaluate.html',  tables=[res_table.to_html(classes='res_table')], titles=res_table.columns.values)
 		
@@ -94,6 +95,7 @@ def evaluate_model():
 			res = res[["ID",y, "y_hat"]]
 			rmse = ((res["y_hat"] - res[y]) ** 2).mean() ** .5
 			res_table = pd.DataFrame({"rmse":rmse}, index=["evaluation result"])
+			res_table.to_csv(f"{model_gridCV.path}model_eval_{y}_{ml_type}.csv")
 
 		return flask.render_template('evaluate.html',  tables=[res_table.to_html(classes='res_table')], titles=res_table.columns.values)
 
@@ -225,20 +227,10 @@ def get_var_importance():
 		return '<center><img src="data:image/png;base64,{}"></center>'.format(plot_url)
 
 
-def shutdown_server():
-    func = flask.request.environ.get('werkzeug.server.shutdown')
-    if func is None:
-        raise RuntimeError('Not running with the Werkzeug Server')
-    func()
-
 @app.route('/close', methods=['POST'])
 def shutdown():
-    shutdown_server()
-    return 'Server shutting down...'
+    sys.exit(4)
 
 
 if __name__ == '__main__':
-	import models.gridCV.model_pipeline as model_gridCV
-	from models.gridCV.model_pipeline import PreProcessing, FeatEngineering, FeatSelection
-	
-	app.run(host='0.0.0.0', port=8000, debug=True)
+	app.run(host='0.0.0.0', port=8000, debug=True, threaded=True)

@@ -8,8 +8,10 @@ from sklearn.externals import joblib
 from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.feature_selection import SelectFromModel
 from sklearn.base import BaseEstimator, TransformerMixin
-from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 from sklearn.pipeline import make_pipeline
+
+from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
+from sklearn.linear_model import LogisticRegression
 
 from models.gridCV.preprocess import PreProcessing
 from models.gridCV.feat_engineering import FeatEngineering
@@ -49,7 +51,7 @@ def ml_pipeline(train, target, ml_type):
 					 "randomforestclassifier__min_impurity_split": [0.1, 0.2, 0.3]}
 
 		grid = GridSearchCV(pipe, param_grid=param_grid, cv=3)
-		grid.fit(X_train, y_train.as_matrix())
+		grid.fit(X_train, y_train[target].as_matrix())
 		return(grid)
 
 	elif ml_type == "Regressor":
@@ -68,8 +70,20 @@ def ml_pipeline(train, target, ml_type):
 					  "randomforestregressor__bootstrap": [True, False]}
 
 		grid = GridSearchCV(pipe, param_grid=param_grid, cv=3)
-		grid.fit(X_train, y_train.as_matrix())
+		grid.fit(X_train, y_train[target].as_matrix())
 		return(grid)
+
+	elif ml_type == "LogisticRegression":
+		pipe = make_pipeline(PreProcessing(),
+							 FeatEngineering(),
+							 FeatSelection(),
+							 MatrixTransform(),
+							 LogisticRegression())
+
+		print("SHAPE: ",X_train.shape, y_train[target].shape)
+		pipe.fit(X_train, y_train[target].as_matrix())
+		return(pipe)
+
 
 	elif ml_type == "Features":
 		PreProcessingInst = PreProcessing()

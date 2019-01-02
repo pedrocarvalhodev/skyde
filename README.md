@@ -1,6 +1,10 @@
 # ml-app-model
 General model to deliver ml apps
 
+# Run Model
+1. gunicorn --workers=2 --timeout 600 --bind 0.0.0.0:8000 app:app
+2. http://0.0.0.0:8000
+
 ### Add to gitignore
 #### data
 *.csv
@@ -11,7 +15,6 @@ General model to deliver ml apps
 data/
 models/*.pk
 models/*.pkl
-
 
 ### Setup venv
 alias cenv='virtualenv -p python3 .venv'
