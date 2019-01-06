@@ -1,5 +1,7 @@
+import os
 import sys
-path = '/home/pedrocarvalhodev/skyde'
+
+path = str(os.getcwd())
 if path not in sys.path:
 	sys.path.insert(0, path)
 

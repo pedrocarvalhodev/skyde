@@ -21,8 +21,6 @@ from models.gridCV.matrix_transform import MatrixTransform
 import warnings
 warnings.filterwarnings("ignore")
 
-path = "/home/pedro/repos/ml_web_api/ml-app-model/data/gridCV/"
-
 
 def ml_pipeline(train, target, ml_type):
 

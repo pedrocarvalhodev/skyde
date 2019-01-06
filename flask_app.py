@@ -1,20 +1,18 @@
+import os
 import io
 import base64
-import sys
-
 import flask
 import dill as pickle
 import numpy as np
 import pandas as pd
-from sklearn.externals import joblib
-from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
-
 import models.gridCV.model_pipeline as model_gridCV
-from models.gridCV.model_pipeline import PreProcessing, FeatEngineering, FeatSelection
 
+from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 from matplotlib import pyplot as plt
 import seaborn as sns
 sns.set_style("dark")
+
+data_path = str(os.getcwd()) + "/data/"
 
 app = flask.Flask(__name__)
 
@@ -56,10 +54,6 @@ def var_importance():
 def features():
     return flask.render_template('features.html')
 
-@app.route('/close/')
-def close():
-    return flask.render_template('close.html')
-
 
 @app.route('/evaluate', methods=['POST'])
 def evaluate_model():
@@ -86,7 +80,7 @@ def evaluate_model():
 
 			res_table = res.groupby([y, "y_hat"]).ID.count().reset_index(drop=False)
 			res_table["perc"] = np.around(res_table.ID / res_table.ID.sum() * 100,1)
-			res_table.to_csv(f"{model_gridCV.path}model_eval_{y}_{ml_type}.csv")
+			res_table.to_csv(f"{data_path}model_eval_{y}_{ml_type}.csv")
 
 			#return flask.render_template('evaluate.html',  tables=[res_table.to_html(classes='res_table')], titles=res_table.columns.values)
 		
@@ -95,7 +89,7 @@ def evaluate_model():
 			res = res[["ID",y, "y_hat"]]
 			rmse = ((res["y_hat"] - res[y]) ** 2).mean() ** .5
 			res_table = pd.DataFrame({"rmse":rmse}, index=["evaluation result"])
-			res_table.to_csv(f"{model_gridCV.path}model_eval_{y}_{ml_type}.csv")
+			res_table.to_csv(f"{data_path}model_eval_{y}_{ml_type}.csv")
 
 		return flask.render_template('evaluate.html',  tables=[res_table.to_html(classes='res_table')], titles=res_table.columns.values)
 
@@ -120,8 +114,8 @@ def make_prediction():
 		prediction_output = pd.DataFrame(prediction).reset_index(drop=False)
 		prediction_output.columns = ["ID", "y_hat"]
 		
-		prediction_output.to_csv(f"{model_gridCV.path}y_hat.csv")
-		print(model_gridCV.path, prediction_output.head())
+		prediction_output.to_csv(f"{data_path}y_hat.csv")
+		print(data_path, prediction_output.head())
 
 		# 4. Render results from prediction method
 		return flask.render_template('predict.html', label="Prediction processed. Check folder for results.")
@@ -148,7 +142,7 @@ def train_model():
 		ml_type = str(flask.request.form['ml_type'])
 
 		model = model_gridCV.ml_pipeline(train=train, target=y, ml_type=ml_type)
-		file_path_name = f"{model_gridCV.path}gridCV_{ml_type}_{y}.pk"
+		file_path_name = f"{data_path}gridCV_{ml_type}_{y}.pk"
 		with open(file_path_name, 'wb') as file:
 			pickle.dump(model, file)
 
@@ -165,9 +159,9 @@ def features_model():
 		y = str(flask.request.form['target_var'])
 
 		X_feat, y_feat, df_feat = model_gridCV.ml_pipeline(train=train, target=y, ml_type="Features")
-		X_feat.to_csv(f"{model_gridCV.path}features_data.csv")
-		y_feat.to_csv(f"{model_gridCV.path}y_features_train.csv")
-		df_feat.to_csv(f"{model_gridCV.path}df_feat.csv")
+		X_feat.to_csv(f"{data_path}features_data.csv")
+		y_feat.to_csv(f"{data_path}y_features_train.csv")
+		df_feat.to_csv(f"{data_path}df_feat.csv")
 		return flask.render_template('features.html', label="Features dataset processed. Check data folder for csv file.")
 
 
@@ -225,11 +219,6 @@ def get_var_importance():
 		img.seek(0)
 		plot_url = base64.b64encode(img.getvalue()).decode()
 		return '<center><img src="data:image/png;base64,{}"></center>'.format(plot_url)
-
-
-@app.route('/close', methods=['POST'])
-def shutdown():
-    sys.exit(4)
 
 
 if __name__ == '__main__':
