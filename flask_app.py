@@ -80,20 +80,17 @@ def evaluate_model():
 
 			res_table = res.groupby([y, "y_hat"]).ID.count().reset_index(drop=False)
 			res_table["perc"] = np.around(res_table.ID / res_table.ID.sum() * 100,1)
-			res_table.to_csv(f"{data_path}model_eval_{y}_{ml_type}.csv")
-
-			#return flask.render_template('evaluate.html',  tables=[res_table.to_html(classes='res_table')], titles=res_table.columns.values)
 		
 		if ml_type == "Regressor":
 			res = y_test.merge(y_hat, left_on="index", right_on="ID", how="inner")
 			res = res[["ID",y, "y_hat"]]
 			rmse = ((res["y_hat"] - res[y]) ** 2).mean() ** .5
 			res_table = pd.DataFrame({"rmse":rmse}, index=["evaluation result"])
-			res_table.to_csv(f"{data_path}model_eval_{y}_{ml_type}.csv")
 
-		return flask.render_template('evaluate.html',  tables=[res_table.to_html(classes='res_table')], titles=res_table.columns.values)
-
-
+		resp = flask.make_response(res_table.to_csv())
+		resp.headers["Content-Disposition"] = "attachment; filename=model_evaluation.csv"
+		resp.headers["Content-Type"] = "text/csv"
+		return resp
 
 
 @app.route('/predict', methods=['POST'])
@@ -114,11 +111,10 @@ def make_prediction():
 		prediction_output = pd.DataFrame(prediction).reset_index(drop=False)
 		prediction_output.columns = ["ID", "y_hat"]
 		
-		prediction_output.to_csv(f"{data_path}y_hat.csv")
-		print(data_path, prediction_output.head())
-
-		# 4. Render results from prediction method
-		return flask.render_template('predict.html', label="Prediction processed. Check folder for results.")
+		resp = flask.make_response(prediction_output.to_csv())
+		resp.headers["Content-Disposition"] = "attachment; filename=prediction_output.csv"
+		resp.headers["Content-Type"] = "text/csv"
+		return resp
 
 
 @app.route('/viz_dataset', methods=['POST'])
@@ -142,11 +138,14 @@ def train_model():
 		ml_type = str(flask.request.form['ml_type'])
 
 		model = model_gridCV.ml_pipeline(train=train, target=y, ml_type=ml_type)
-		file_path_name = f"{data_path}gridCV_{ml_type}_{y}.pk"
+		
+		file_path_name = f"{data_path}{ml_type}_{y}.pk"
 		with open(file_path_name, 'wb') as file:
 			pickle.dump(model, file)
 
-		return flask.render_template('train.html', label="Training processed. Check folder for pickle file.")
+		resp = flask.Response(open(file_path_name, 'rb'))
+		resp.headers["Content-Disposition"] = "attachment; filename=model.pk"
+		return resp
 
 
 @app.route('/features', methods=['POST'])
@@ -156,13 +155,14 @@ def features_model():
 		data = data_file.read()
 
 		train = pd.read_csv(io.BytesIO(data), encoding='utf-8', sep=",")
-		y = str(flask.request.form['target_var'])
+		y = str(flask.request.form['target_var']) # Dropdown list
 
-		X_feat, y_feat, df_feat = model_gridCV.ml_pipeline(train=train, target=y, ml_type="Features")
-		X_feat.to_csv(f"{data_path}features_data.csv")
-		y_feat.to_csv(f"{data_path}y_features_train.csv")
-		df_feat.to_csv(f"{data_path}df_feat.csv")
-		return flask.render_template('features.html', label="Features dataset processed. Check data folder for csv file.")
+		df_feat = model_gridCV.ml_pipeline(train=train, target=y, ml_type="Features")
+		
+		resp = flask.make_response(df_feat.to_csv())
+		resp.headers["Content-Disposition"] = "attachment; filename=df_features_transform.csv"
+		resp.headers["Content-Type"] = "text/csv"
+		return resp
 
 
 @app.route('/var_importance', methods=['POST'])

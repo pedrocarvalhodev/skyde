@@ -95,7 +95,7 @@ def ml_pipeline(train, target, ml_type):
 		print("Downloaded features data.")
 		y_train = y_train[target].to_frame()
 		df_feat = X_train.merge(y_train, left_index=True, right_index=True, how="inner")
-		return X_train, y_train, df_feat
+		return df_feat
 	
 	else:
 		print("Warning: ml_type error")
