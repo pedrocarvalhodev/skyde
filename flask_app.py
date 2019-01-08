@@ -1,6 +1,7 @@
 import os
 import io
 import base64
+import time
 import flask
 import dill as pickle
 import numpy as np
@@ -12,7 +13,7 @@ from matplotlib import pyplot as plt
 import seaborn as sns
 sns.set_style("dark")
 
-data_path = str(os.getcwd()) + "/data/"
+main_path = str(os.getcwd())
 
 app = flask.Flask(__name__)
 
@@ -31,8 +32,7 @@ def report():
 
 @app.route('/train/')
 def train():
-	#ml_types = ['Regressor', 'Classifier']
-	return flask.render_template('train.html')#, ml_types=ml_types)
+	return flask.render_template('train.html')
 
 @app.route('/evaluate/')
 def evaluate():
@@ -53,6 +53,23 @@ def var_importance():
 @app.route('/features/')
 def features():
     return flask.render_template('features.html')
+
+@app.route('/profiling/')
+def profiling():
+    return flask.render_template('profiling.html')
+
+
+@app.route('/profiling', methods=['POST'])
+def get_profiling():
+	if flask.request.method=='POST':
+		import pandas_profiling
+		data_file = flask.request.files['dataset']
+		data = data_file.read()
+		data = pd.read_csv(io.BytesIO(data), encoding='utf-8', sep=",")
+		
+		profile = pandas_profiling.ProfileReport(data)
+		profile.to_file(outputfile=main_path+"/templates/"+"profiling_report.html")
+		return flask.render_template("profiling_report.html")
 
 
 @app.route('/evaluate', methods=['POST'])
@@ -139,7 +156,7 @@ def train_model():
 
 		model = model_gridCV.ml_pipeline(train=train, target=y, ml_type=ml_type)
 		
-		file_path_name = f"{data_path}{ml_type}_{y}.pk"
+		file_path_name = f"{main_path}/data/{ml_type}_{y}.pk"
 		with open(file_path_name, 'wb') as file:
 			pickle.dump(model, file)
 

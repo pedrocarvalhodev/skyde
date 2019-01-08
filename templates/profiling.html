@@ -1,0 +1,30 @@
+<html> 
+
+<head>
+<title>ML Flask API</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+
+<body>
+
+{% extends "layout.html" %}
+{% block content %}
+
+    <div class="predict">
+
+    <h1>Profile Dataset</h1>
+    <h2>Get descriptive HTML report</h2>
+      <h3>-------------</h3>
+    <form action="/profiling" method="post" enctype="multipart/form-data">
+      Upload dataset: <input type="file" accept=".csv" name="dataset" value="Upload dataset"><br>
+      <h3>-------------</h3>
+      Get Viz <input type="submit" value="Profile">
+    </form>
+
+    </div>
+    {% endblock %}
+
+</body>
+
+</html>
