@@ -58,6 +58,10 @@ def features():
 def profiling():
     return flask.render_template('profiling.html')
 
+@app.route('/timeseries/')
+def timeseries():
+    return flask.render_template('timeseries.html')
+
 
 @app.route('/profiling', methods=['POST'])
 def get_profiling():
@@ -222,6 +226,85 @@ def get_var_importance():
 		features.sort_values(by=['importance'], ascending=True, inplace=True)
 		features = features.sort_values(by="importance", ascending=True).reset_index(drop=False)
 		features = features.head(10)
+		
+		# 4. Define viz
+		plt.figure(figsize=(10,6))
+		plt.barh(list(features['feature'].values), list(features['importance'].values))
+		plt.xlabel('Relative Importance')
+		plt.ylabel('Top Features \n Descending order')
+		plt.title(f"Dataset features by importance \n Target: {y} \n ML method: {ml_type}")
+
+		# 5. Save and render
+		img = io.BytesIO()
+		plt.savefig(img, format='png')
+		img.seek(0)
+		plot_url = base64.b64encode(img.getvalue()).decode()
+		return '<center><img src="data:image/png;base64,{}"></center>'.format(plot_url)
+
+
+@app.route('/timeseries', methods=['POST'])
+def get_timeseries():
+
+	if flask.request.method=='POST':
+
+		# 1. Get and clean dataset
+		y = str(flask.request.form['target_var'])
+		
+		data_file = flask.request.files['dataset']
+		data = data_file.read()
+		df = pd.read_csv(io.BytesIO(data), encoding='utf-8', sep=",")
+		df = df.select_dtypes(include=[np.number]).copy()
+		df = df.dropna().astype(float)
+
+		### 2. Get y, X fields
+		#print("target: ", y)
+		#X = [x for x in df.columns if x != y]
+		#df_X = df[X].copy()
+		#df_X['Random'] = np.random.randint(1, 6, df_X.shape[0])
+		#for col in df_X.columns:
+		#	if col in ["PassengerId", "index", "Unnamed: 0"]:
+		#		df_X.drop(col, axis=1, inplace=True)
+
+		#######------------------------------------------------ Vydia
+		# https://www.analyticsvidhya.com/blog/2018/02/time-series-forecasting-methods/
+		#df = pd.read_csv('/home/pedro/Downloads/train_timeseries.csv')
+
+		#Subsetting the dataset
+		#Index 11856 marks the end of year 2013
+		from statsmodels.tsa.api import ExponentialSmoothing, SimpleExpSmoothing, Holt
+		import statsmodels.api as sm
+		
+		df = pd.read_csv('/home/pedro/Downloads/train_timeseries.csv', nrows = 11856)
+
+		#Creating train and test set 
+		#Index 10392 marks the end of October 2013 
+		train=df[0:10392] 
+		test=df[10392:]
+
+		#Aggregating the dataset at daily level
+		df.Timestamp = pd.to_datetime(df.Datetime,format='%d-%m-%Y %H:%M') 
+		df.index = df.Timestamp 
+		df = df.resample('D').mean()
+		train.Timestamp = pd.to_datetime(train.Datetime,format='%d-%m-%Y %H:%M') 
+		train.index = train.Timestamp 
+		train = train.resample('D').mean() 
+		test.Timestamp = pd.to_datetime(test.Datetime,format='%d-%m-%Y %H:%M') 
+		test.index = test.Timestamp 
+		test = test.resample('D').mean()
+
+
+		#----
+		y_hat_avg = test.copy()
+		fit1 = sm.tsa.statespace.SARIMAX(train.Count, order=(2, 1, 4),seasonal_order=(0,1,1,7)).fit()
+		y_hat_avg['SARIMA'] = fit1.predict(start="2013-11-1", end="2013-12-31", dynamic=True)
+		plt.figure(figsize=(16,8))
+		plt.plot( train['Count'], label='Train')
+		plt.plot(test['Count'], label='Test')
+		plt.plot(y_hat_avg['SARIMA'], label='SARIMA')
+		plt.legend(loc='best')
+		#######------------------------------------------------ Vydia
+
+
 		
 		# 4. Define viz
 		plt.figure(figsize=(10,6))

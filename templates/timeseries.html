@@ -1,0 +1,40 @@
+<html> 
+
+<head>
+<title>ML Flask API</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+
+<body>
+
+{% extends "layout.html" %}
+{% block content %}
+<div class="var_importance">
+
+    <h1>timeseries</h1>
+    <h2>timeseries</h2>
+    <form action="/timeseries" method="post" enctype="multipart/form-data">
+        Select Dataset: <input type="file" accept=".csv" name="dataset" value="Upload dataset"><br>
+        Select ML Type: <select name="ml_type">
+            <option value="Regressor">Regressor</option>
+            <option value="Classifier">Classifier</option>
+        </select><br>
+
+    Target metric: <select name="target_var">
+        <option value="Survived">Survived</option>
+        <option value="Fare">Fare</option>
+    </select><br>
+
+    <h3>-------------</h3>
+
+    Get results: <input type="submit" value="Viz">
+    </form>
+    <img src="data:image/png;base64, {{ plot_url }}">
+
+    </div>
+    {% endblock %}
+
+</body>
+
+</html>
