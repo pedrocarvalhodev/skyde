@@ -6,3 +6,7 @@ seaborn
 pandas-profiling
 Flask
 gunicorn
+statsmodels
+pmdarima
+pandas-datareader
+
