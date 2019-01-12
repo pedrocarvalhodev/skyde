@@ -12,7 +12,7 @@ server = flask.Flask(__name__)
 
 #----------------------
 # for deployment, pass app.server (which is the actual flask app) to WSGI etc
-dash_app1 = dash.Dash(__name__, server = server, url_base_pathname='/dashboard' )
+dash_app1 = dash.Dash(__name__, server = server, url_base_pathname='/dashboard/' )
 
 dash_app1.layout = html.Div(children=[
     html.H1(children='Hello Dash'),
@@ -36,21 +36,21 @@ dash_app1.layout = html.Div(children=[
 ])
 #----------------------
 
-dash_app2 = dash.Dash(__name__, server = server, url_base_pathname='/reports')
+dash_app2 = dash.Dash(__name__, server = server, url_base_pathname='/reports/')
 dash_app2.layout = html.Div([html.H1('Hi there, I am app2 for reports')])
 #dash_app1.layout = html.Div([html.H1('Hi there, I am app1 for dashboards')])
 
 @server.route('/')
-@server.route('/hello')
+@server.route('/hello/')
 def hello():
     return 'hello world!'
 
-@server.route('/dashboard')
+@server.route('/dashboard/')
 def render_dashboard():
     return flask.redirect('/dash1')
 
 
-@server.route('/reports')
+@server.route('/reports/')
 def render_reports():
     return flask.redirect('/dash2')
 
