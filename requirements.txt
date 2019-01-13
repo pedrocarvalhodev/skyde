@@ -9,4 +9,8 @@ gunicorn
 statsmodels
 pmdarima
 pandas-datareader
-
+dash
+dash-html-components
+dash-core-components
+dash-table
+dash-table-experiments
