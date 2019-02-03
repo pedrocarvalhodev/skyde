@@ -112,3 +112,4 @@ data/*.pk
 data/*.pkl
 models/*.pk
 models/*.pkl
+*.ipynb
