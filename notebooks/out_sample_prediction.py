@@ -1,7 +1,14 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[1]:
+# In[23]:
+
+
+import io
+import base64
+
+
+# In[11]:
 
 
 import datetime
@@ -11,16 +18,26 @@ import pandas_datareader.data as web
 from pmdarima.arima import auto_arima
 
 
-# In[2]:
+# In[12]:
+
+
+from matplotlib import pyplot as plt
+import seaborn as sns
+sns.set_style("dark")
+
+
+# In[13]:
 
 
 #from plotly.offline import download_plotlyjs, init_notebook_mode, plot,iplot, plot_mpl
 #import plotly.plotly as ply
-import cufflinks as cf
-cf.go_offline()
+#import cufflinks as cf
+#cf.go_offline()
 
 
-# In[3]:
+# https://iextrading.com/trading/eligible-symbols/
+
+# In[14]:
 
 
 SYMBOLS = {"AAPL":"APPLE INC",
@@ -38,7 +55,7 @@ SYMBOLS = {"AAPL":"APPLE INC",
 
 
 
-# In[4]:
+# In[15]:
 
 
 name = 'AMZN'
@@ -48,7 +65,7 @@ data = web.DataReader(name,'iex',start=start,end=end)
 data.tail(2)
 
 
-# In[5]:
+# In[16]:
 
 
 df=data.copy()
@@ -61,7 +78,7 @@ df = df.interpolate(method='linear')
 df.dropna(inplace=True)
 
 
-# In[6]:
+# In[17]:
 
 
 stepwise_model = auto_arima(y=df, start_p=1, start_q=1,
@@ -75,7 +92,7 @@ stepwise_model = auto_arima(y=df, start_p=1, start_q=1,
 stepwise_model.fit(df)
 
 
-# In[7]:
+# In[18]:
 
 
 n_periods=30
@@ -85,28 +102,41 @@ future_forecast = pd.DataFrame(future_forecast,
                                columns=['Prediction'])
 
 
-# In[8]:
+# In[19]:
 
 
-pd.concat([df.tail(n_periods*4),future_forecast],axis=1).iplot()
+ds = pd.concat([df.tail(n_periods*4),future_forecast],axis=1)
 
 
-# In[ ]:
+# In[24]:
 
 
+ds.plot()
+plt.xlabel('Relative Importance')
+plt.ylabel('Top Features \n Descending order')
+plt.title(f"Dataset features by importance \n Target: SYMBOL \n ML method: MMM")
+# 5. Save and render
+img = io.BytesIO()
+plt.savefig(img, format='png')
+img.seek(0)
 
 
-
-# In[ ]:
-
+# In[30]:
 
 
+#ds.plot()
+plt.figure(figsize=(10,6))
+plt.plot(list(ds.index), list(ds['Close'].values))
+plt.plot(list(ds.index), list(ds['Prediction'].values))
+plt.xlabel('Relative Importance')
+plt.ylabel('Top Features \n Descending order')
+plt.title(f"Dataset features by importance \n Target: SYMBOL \n ML method: MMM")
 
 
-# In[ ]:
+# In[29]:
 
 
-
+ds.head()
 
 
 # In[ ]:
