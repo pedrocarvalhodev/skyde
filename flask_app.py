@@ -2,11 +2,13 @@ import os
 import io
 import base64
 import time
+import datetime
 import dill as pickle
 import numpy as np
 import pandas as pd
+import pandas_datareader.data as web
 import models.gridCV.model_pipeline as model_gridCV
-
+from pmdarima.arima import auto_arima
 
 import flask
 #import werkzeug
@@ -47,6 +49,10 @@ def train():
 @app.route('/evaluate/')
 def evaluate():
     return flask.render_template('evaluate.html')
+
+@app.route('/market_predictor/')
+def market_predictor():
+    return flask.render_template('market_predictor.html')
 
 @app.route('/predict/')
 def predict():
@@ -122,6 +128,53 @@ def evaluate_model():
 		resp.headers["Content-Disposition"] = "attachment; filename=model_evaluation.csv"
 		resp.headers["Content-Type"] = "text/csv"
 		return resp
+
+@app.route('/market_predictor', methods=['POST'])
+def get_market_predictor():
+	if flask.request.method=='POST':
+		stock_symbol = str(flask.request.form['StockSymbol'])
+		#name = 'AMZN'
+		end = datetime.datetime.today()
+		start = end-datetime.timedelta(days=365)
+		df = web.DataReader(stock_symbol,'iex',start=start,end=end)
+		
+		df.rename(index=str, columns={"close": "Close"}, inplace=True)
+		df = df["Close"].to_frame()
+		idx = pd.date_range(df.index.min(), df.index.max(), freq="D")
+		df.index = pd.DatetimeIndex(df.index)
+		df = df.reindex(idx, fill_value=np.nan)
+		df = df.interpolate(method='linear')
+		df.dropna(inplace=True)
+
+		stepwise_model = auto_arima(y=df, start_p=1, start_q=1,
+                           max_p=7, max_q=7, max_d=7, max_order=14,
+                           m=7, start_P=0, seasonal=True,
+                           d=1, trace=True,
+                           error_action='ignore',  
+                           suppress_warnings=True, 
+                           stepwise=True)
+
+		stepwise_model.fit(df)
+
+		n_periods=30
+		future_forecast = stepwise_model.predict(n_periods=n_periods)
+		future_forecast = pd.DataFrame(future_forecast,
+		                               index = pd.date_range(start=df.index[-1], end=None, periods=n_periods, freq="D"),
+		                               columns=['Prediction'])
+		ds = pd.concat([df.tail(n_periods*4),future_forecast],axis=1)
+
+		plt.figure(figsize=(10,6))
+		plt.plot(list(ds.index), list(ds['Close'].values))
+		plt.plot(list(ds.index), list(ds['Prediction'].values))
+		plt.xlabel('Date')
+		plt.ylabel('Stock Price')
+		plt.title(f"Dataset features by importance \n Stock: {stock_symbol} \n 30 day prediction")
+		# 5. Save and render
+		img = io.BytesIO()
+		plt.savefig(img, format='png')
+		img.seek(0)
+		plot_url = base64.b64encode(img.getvalue()).decode()
+		return '<center><img src="data:image/png;base64,{}"></center>'.format(plot_url)
 
 
 @app.route('/predict', methods=['POST'])
@@ -504,11 +557,6 @@ def update_graph(xaxis_column_name, yaxis_column_name,
 #@app.route('/timeseries/')
 #def timeseries():
 #    return flask.render_template('timeseries.html')
-
-
-@app.route('/hello/')
-def hello():
-    return 'hello world!'
 
 @app.route('/dashboard/')
 def render_dashboard():

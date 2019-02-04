@@ -1,0 +1,41 @@
+<html> 
+
+<head>
+<title>ML Flask API</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+
+<body>
+
+{% extends "layout.html" %}
+{% block content %}
+<div class="evaluate">
+
+    <h1>Stock Market Predictor</h1>
+    <h2>Choose Stock Symbol and run analysis</h2>
+    <h3>-------------</h3>
+    <form action="/market_predictor" method="post" enctype="multipart/form-data">
+
+      Select Stock Symbol: <select name="StockSymbol">
+
+        <option value="AAPL">APPLE INC</option>
+        <option value="PBR">PETROLEO BRASILEIRO-SPON ADR</option>
+        <option value="VIV">TELEFONICA BRASIL-ADR PREF</option>
+        <option value="C">CITIGROUP INC</option>
+        <option value="FB">FACEBOOK INC-CLASS A</option>
+        <option value="AMZN">AMAZON.COM INC</option>
+      </select><br>
+
+      <h3>-------------</h3>
+
+    Get results: <input type="submit" value="Viz">
+    </form>
+    
+    <img src="data:image/png;base64, {{ plot_url }}">
+    </div>
+    {% endblock %}
+
+</body>
+
+</html>
